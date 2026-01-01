@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Resume Screener - NLP Powered</title>
+
+    <!-- Plotly -->
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+    <!-- Three.js -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.167.1/build/three.min.js"></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <!-- JS -->
+    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+</head>
+
+<body>
+
+<!-- ================= NAVBAR ================= -->
+<nav class="navbar glass-card">
+    <div class="nav-left">
+        <span class="brand">🚀 AI Resume Screener</span>
+    </div>
+
+    <div class="nav-right">
+        <span class="user-info">
+            👤 {{ session.user }}
+            {% if session.role == "admin" %}
+                <span class="badge">ADMIN</span>
+            {% else %}
+                <span class="badge hr">HR</span>
+            {% endif %}
+        </span>
+
+        <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+    </div>
+</nav>
+
+<!-- 3D Background -->
+<canvas id="three-canvas"></canvas>
+
+<div class="container">
+    <h1>🚀 AI Resume Screener</h1>
+    <p>Upload PDF + Job Role → NLP Scoring + Explainability</p>
+
+    <!-- ================= FORM ================= -->
+    <form id="upload-form" method="POST" enctype="multipart/form-data">
+
+        <!-- Resume -->
+        <input type="file" name="resume" accept=".pdf" required>
+
+        <!-- Job Role Dropdown -->
+        <select name="job_role" id="job-role">
+            <option value="">🎯 Select Job Role (Optional)</option>
+            {% for key, jd in job_templates.items() %}
+                <option value="{{ key }}">{{ key.replace('_',' ').title() }}</option>
+            {% endfor %}
+        </select>
+
+        <!-- Job Description -->
+        <textarea
+            name="job_desc"
+            id="job-desc"
+            placeholder="Job description (auto-filled when role is selected)"
+            rows="4"
+        >{{ job_desc if job_desc else '' }}</textarea>
+
+        <button type="submit">🔍 Analyze Resume</button>
+    </form>
+
+    <!-- Spinner -->
+    <div id="spinner" class="spinner" style="display:none;">
+        🔄 AI Analyzing<span class="dots"></span>
+    </div>
+
+    <!-- Error -->
+    {% if error %}
+    <div class="error">❌ {{ error }}</div>
+    {% endif %}
+
+    <!-- ================= RESULTS ================= -->
+    {% if success %}
+    <div class="results glass-card">
+        <h2>
+            ✅ Final Score:
+            <span id="final-score">{{ "%.1f"|format(score * 100) }}%</span>
+        </h2>
+
+        <div class="scores">
+            <div>📊 Quality: {{ "%.1f"|format(quality * 100) }}%</div>
+            <div>🎯 Job Match: {{ "%.1f"|format(match * 100) }}%</div>
+        </div>
+
+        <!-- Skills Chart -->
+        <div id="skills-chart" class="chart-container"></div>
+
+        <!-- Skills -->
+        <div class="skills-list">
+            <h3>Top Skills</h3>
+            <ul>
+                {% for skill in top_skills[:5] %}
+                <li>{{ skill.name }} ({{ "%.0f"|format(skill.score * 100) }}%)</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- ================= HEATMAP ================= -->
+        {% if heatmap %}
+<div class="heatmap glass-card">
+    <h3>🔥 Resume ↔ Job Description Match</h3>
+    <div class="heatmap-words">
+        {% for word in heatmap %}
+            <span class="heat-word">{{ word }}</span>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+
+        <!-- Preview -->
+        <div class="preview">
+            <h3>📄 Resume Preview</h3>
+            <p>{{ preview }}</p>
+        </div>
+
+        <!-- Download -->
+        <a href="/download/{{ report }}" class="download-btn">
+            📥 Download PDF Report
+        </a>
+
+        <button type="button" class="clear-btn" onclick="location.reload()">
+            🔄 New Analysis
+        </button>
+    </div>
+
+    <!-- Auto-render chart -->
+    <script>
+        if (typeof renderSkillsChart === "function") {
+            renderSkillsChart();
+        }
+    </script>
+    {% endif %}
+
+    <!-- Status -->
+    <div class="status">
+        Models:
+        {% if success %}
+            ✅ Loaded
+        {% else %}
+            ⚠️ Not trained
+        {% endif %}
+    </div>
+</div>
+
+<!-- ================= JD AUTO-FILL ================= -->
+<script>
+    const templates = {{ job_templates|tojson }};
+    const roleSelect = document.getElementById("job-role");
+    const jdBox = document.getElementById("job-desc");
+
+    if (roleSelect) {
+        roleSelect.addEventListener("change", () => {
+            const role = roleSelect.value;
+            if (templates[role]) {
+                jdBox.value = templates[role];
+            }
+        });
+    }
+</script>
+
+</body>
+</html>
