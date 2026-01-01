@@ -8,3 +8,4 @@ reportlab
 spacy
 plotly
 gunicorn
+requests
