@@ -4,36 +4,74 @@
     <meta charset="UTF-8">
     <title>Login | AI Resume Screener</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Styles -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body class="auth-page">
 
-
+<!-- 3D Background -->
 <canvas id="three-canvas"></canvas>
 
+<!-- ================= AUTH CONTAINER ================= -->
 <div class="auth-container glass-card">
-    <h2>🔐 Login</h2>
-    <p>Welcome back, HR / Admin</p>
 
+    <!-- ===== HEADER ===== -->
+    <div class="auth-header">
+        <div class="auth-icon">
+            <!-- LOCK SVG ICON -->
+            <svg viewBox="0 0 24 24" fill="none">
+                <path d="M7 10V7a5 5 0 0110 0v3"
+                      stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round"/>
+                <rect x="5" y="10" width="14" height="10" rx="2"
+                      stroke="currentColor" stroke-width="2"/>
+            </svg>
+        </div>
+
+        <h2 class="auth-title">Login</h2>
+        <p class="auth-subtitle">Welcome back, HR / Admin</p>
+    </div>
+
+    <!-- ===== ERROR ===== -->
     {% if error %}
-        <div class="error">❌ {{ error }}</div>
+        <div class="error">{{ error }}</div>
     {% endif %}
 
-    <form method="POST">
-        <input type="text" name="username" placeholder="Username" required>
+    <!-- ===== FORM ===== -->
+    <form method="POST" class="auth-form">
+        <input
+            type="text"
+            name="username"
+            placeholder="Username"
+            required
+        >
 
-        <input type="password" name="password" placeholder="Password" required>
+        <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            required
+        >
 
-        <button type="submit">Login</button>
+        <button type="submit">
+            Sign In
+        </button>
     </form>
 
+    <!-- ===== FOOTER ===== -->
     <div class="auth-footer">
-        <p>New here?
+        <p>
+            New here?
             <a href="{{ url_for('register') }}">Create account</a>
         </p>
     </div>
+
 </div>
 
+<!-- JS -->
 <script src="{{ url_for('static', filename='script.js') }}"></script>
+
 </body>
 </html>
