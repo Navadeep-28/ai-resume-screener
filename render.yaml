@@ -3,7 +3,9 @@ services:
     name: ai-resume-screener
     env: python
     plan: free
-    buildCommand: pip install -r requirements.txt
+    buildCommand: 
+      pip install -r requirements.txt
+      python -m spacy download en_core_web_sm
     startCommand: gunicorn app:app
     envVars:
       - key: PYTHON_VERSION
