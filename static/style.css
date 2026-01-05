@@ -298,6 +298,254 @@ button:hover {
     gap: 36px; /* controls vertical rhythm */
 }
 
+/* ======================================================
+   NEW: DECISION BADGE
+====================================================== */
+.decision-badge {
+    display: inline-block;
+    padding: 12px 28px;
+    border-radius: 999px;
+    font-size: 1rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    text-align: center;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    animation: badgePulse 2s ease-in-out infinite;
+}
+
+.decision-badge.pass {
+    background: linear-gradient(135deg, var(--neon-green), #00d9ff);
+    color: #000;
+    box-shadow: 
+        0 8px 24px rgba(0,255,136,0.5),
+        0 0 40px rgba(0,255,136,0.3);
+}
+
+.decision-badge.fail {
+    background: linear-gradient(135deg, #ff3366, #ff6b9d);
+    color: #fff;
+    box-shadow: 
+        0 8px 24px rgba(255,51,102,0.5),
+        0 0 40px rgba(255,51,102,0.3);
+}
+
+/* ======================================================
+   NEW: METRIC CARDS
+====================================================== */
+.metric-card {
+    padding: 24px;
+    border-radius: 18px;
+    background: linear-gradient(
+        135deg,
+        rgba(255,255,255,0.12),
+        rgba(255,255,255,0.06)
+    );
+    border: 1px solid rgba(255,255,255,0.18);
+    box-shadow: 
+        0 10px 30px rgba(0,0,0,0.3),
+        inset 0 1px 0 rgba(255,255,255,0.2);
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 
+        0 16px 40px rgba(0,0,0,0.4),
+        inset 0 1px 0 rgba(255,255,255,0.3);
+}
+
+.metric-card h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.metric-card p {
+    font-size: 2.4rem;
+    font-weight: 900;
+    margin: 0;
+    background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Risk level colors */
+.metric-card.risk.low p {
+    background: linear-gradient(135deg, var(--neon-green), #00d9ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.metric-card.risk.medium p {
+    background: linear-gradient(135deg, #ffd23f, #ff9500);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.metric-card.risk.high p {
+    background: linear-gradient(135deg, #ff3366, #ff0055);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* ======================================================
+   DECISION BOX (EXISTING - PRESERVED)
+====================================================== */
+.decision-box {
+    padding: 28px;
+    border-radius: 20px;
+    text-align: center;
+    border: 2px solid;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+}
+
+.decision-box.pass {
+    background: linear-gradient(
+        135deg,
+        rgba(0,255,136,0.15),
+        rgba(0,230,255,0.15)
+    );
+    border-color: var(--neon-green);
+    box-shadow: 
+        0 12px 40px rgba(0,255,136,0.3),
+        inset 0 0 20px rgba(0,255,136,0.1);
+}
+
+.decision-box.fail {
+    background: linear-gradient(
+        135deg,
+        rgba(255,51,102,0.15),
+        rgba(255,107,157,0.15)
+    );
+    border-color: #ff3366;
+    box-shadow: 
+        0 12px 40px rgba(255,51,102,0.3),
+        inset 0 0 20px rgba(255,51,102,0.1);
+}
+
+.decision-box h2 {
+    font-size: 1.8rem;
+    margin-bottom: 12px;
+}
+
+.decision-box p {
+    font-size: 1.05rem;
+    line-height: 1.6;
+    margin-bottom: 16px;
+}
+
+.confidence {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    background: rgba(255,255,255,0.12);
+    color: var(--text-muted);
+}
+
+/* ======================================================
+   NEW: FAILURE REASONS BOX
+====================================================== */
+.failure-box {
+    padding: 24px;
+    border-radius: 18px;
+    background: linear-gradient(
+        135deg,
+        rgba(255,51,102,0.12),
+        rgba(255,107,157,0.08)
+    );
+    border: 1px solid rgba(255,51,102,0.3);
+    box-shadow: 
+        0 10px 30px rgba(255,51,102,0.2),
+        inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+.failure-box h3 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: #ff6b9d;
+}
+
+.failure-box ul {
+    list-style: none;
+    padding: 0;
+}
+
+.failure-box li {
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.08);
+    border-left: 4px solid #ff3366;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.failure-box li:hover {
+    transform: translateX(6px);
+    background: rgba(255,255,255,0.12);
+}
+
+.failure-box li:last-child {
+    margin-bottom: 0;
+}
+
+/* ======================================================
+   NEW: AI EXPLANATION BOX
+====================================================== */
+.explain-box {
+    padding: 28px;
+    border-radius: 18px;
+    background: linear-gradient(
+        135deg,
+        rgba(123,108,255,0.12),
+        rgba(0,230,255,0.08)
+    );
+    border: 1px solid rgba(123,108,255,0.3);
+    box-shadow: 
+        0 10px 30px rgba(123,108,255,0.2),
+        inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+.explain-box h3 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, var(--neon-purple), var(--neon-blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.explain-box p {
+    margin-bottom: 16px;
+    line-height: 1.7;
+    font-size: 0.95rem;
+    text-align: left;
+}
+
+.explain-box p:last-child {
+    margin-bottom: 0;
+}
+
+.explain-box strong {
+    color: var(--neon-blue);
+    font-weight: 700;
+    display: inline-block;
+    margin-right: 6px;
+}
+
+/* ======================================================
+   SCORE HEADER (EXISTING - PRESERVED)
+====================================================== */
 .score-header {
     display: flex;
     align-items: center;
@@ -388,6 +636,66 @@ button:hover {
         rgba(123,108,255,0.35)
     );
     backdrop-filter: blur(10px);
+}
+
+/* ======================================================
+   GAP BOX (EXISTING - PRESERVED)
+====================================================== */
+.gap-box {
+    padding: 24px;
+    border-radius: 18px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+}
+
+.gap-box h3 {
+    font-size: 1.1rem;
+    margin-bottom: 14px;
+    color: var(--text-muted);
+}
+
+.gap-box ul {
+    list-style: none;
+    padding: 0;
+}
+
+.gap-box li {
+    padding: 10px 16px;
+    margin-bottom: 8px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.06);
+    font-size: 0.9rem;
+}
+
+/* ======================================================
+   RECOMMENDATIONS (EXISTING - PRESERVED)
+====================================================== */
+.recommendations {
+    padding: 24px;
+    border-radius: 18px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+}
+
+.recommendations h3 {
+    font-size: 1.1rem;
+    margin-bottom: 14px;
+    color: var(--text-muted);
+}
+
+.recommendations ul {
+    list-style: none;
+    padding: 0;
+}
+
+.recommendations li {
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.06);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    border-left: 3px solid var(--neon-blue);
 }
 
 /* ======================================================
@@ -588,12 +896,6 @@ button:hover {
 .page-header p {
     margin-bottom: 0;
 }
-.actions {
-    margin-top: 32px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px;
-}
 
 /* ======================================================
    ANIMATIONS
@@ -621,6 +923,16 @@ button:hover {
         box-shadow: 0 10px 20px rgba(0, 170, 255, 0.6), 0 0 30px rgba(0, 170, 255, 1);
     }
 }
+
+@keyframes badgePulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
 /* ======================================================
    RESPONSIVE
 ====================================================== */
@@ -637,5 +949,17 @@ button:hover {
     #final-score {
         font-size: 3rem;
     }
+    
+    .decision-badge {
+        font-size: 0.9rem;
+        padding: 10px 24px;
+    }
+    
+    .metric-card p {
+        font-size: 2rem;
+    }
+    
+    .explain-box p {
+        font-size: 0.9rem;
+    }
 }
-
