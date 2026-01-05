@@ -22,12 +22,14 @@
 
 <!-- ================= NAVBAR ================= -->
 <nav class="navbar glass-card">
-    <div class="nav-left">
-        <span class="brand">AI Resume Screener</span>
-    </div>
+    <span class="brand">AI Resume Screener</span>
 
     <div class="nav-right">
         <span class="user-info">
+            <svg class="icon" style="width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 8px;" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+            </svg>
             {{ session.user }}
             {% if session.role == "admin" %}
                 <span class="badge">ADMIN</span>
@@ -35,15 +37,12 @@
                 <span class="badge hr">HR</span>
             {% endif %}
         </span>
-
         <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
     </div>
 </nav>
 
-<!-- 3D Background -->
 <canvas id="three-canvas"></canvas>
 
-<!-- ================= MAIN CONTAINER ================= -->
 <div class="container">
 
     <!-- ================= HEADER ================= -->
@@ -53,66 +52,57 @@
     </header>
 
     <!-- ================= FORM ================= -->
-    <form id="upload-form" method="POST" enctype="multipart/form-data" class="glass-card form-card">
+    {% if not success %}
+    <form method="POST" enctype="multipart/form-data" class="glass-card form-card">
 
-        <!-- Resume Upload -->
         <div class="form-group">
             <label class="field-label">
-                <svg viewBox="0 0 24 24" class="icon">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                    <path d="M14 2v6h6"/>
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
                 </svg>
                 Resume (PDF)
             </label>
             <input type="file" name="resume" accept=".pdf" required>
         </div>
 
-        <!-- Job Role -->
         <div class="form-group">
             <label class="field-label">
-                <svg viewBox="0 0 24 24" class="icon">
-                    <path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5z"/>
-                    <path d="M4 22c0-4 4-6 8-6s8 2 8 6"/>
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
                 </svg>
                 Job Role
             </label>
             <select name="job_role" id="job-role">
-                <option value="">Select a job role (optional)</option>
-                {% for key, jd in job_templates.items() %}
+                <option value="">Select a job role</option>
+                {% for key in job_templates %}
                     <option value="{{ key }}">{{ key.replace('_',' ').title() }}</option>
                 {% endfor %}
             </select>
         </div>
 
-        <!-- Job Description -->
         <div class="form-group">
             <label class="field-label">
-                <svg viewBox="0 0 24 24" class="icon">
-                    <path d="M4 4h16v16H4z"/>
-                    <path d="M8 8h8M8 12h8M8 16h5"/>
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <line x1="12" y1="9" x2="8" y2="9"></line>
                 </svg>
                 Job Description
             </label>
-            <textarea
-                name="job_desc"
-                id="job-desc"
-                placeholder="Job description (auto-filled when role is selected)"
-                rows="5"
-            >{{ job_desc if job_desc else '' }}</textarea>
+            <textarea name="job_desc" id="job-desc" rows="5"></textarea>
         </div>
 
-        <!-- Submit -->
-        <button type="submit" class="primary-btn">
-            Analyze Resume
-        </button>
+        <button type="submit" class="primary-btn">Analyze Resume</button>
     </form>
+    {% endif %}
 
-    <!-- Spinner -->
-    <div id="spinner" class="spinner" style="display:none;">
-        Analyzing resume…
-    </div>
-
-    <!-- Error -->
     {% if error %}
         <div class="error">{{ error }}</div>
     {% endif %}
@@ -121,6 +111,37 @@
     {% if success %}
     <section class="results glass-card">
 
+        <!-- ===== NEW: DECISION BADGE ===== -->
+        <div class="decision-badge {{ 'pass' if status == 'PASS' else 'fail' }}">
+            {{ status }}
+        </div>
+
+        <!-- ===== PASS / FAIL DECISION ===== -->
+        <div class="decision-box {{ decision|lower }}">
+            <h2>
+                {% if decision == "PASS" %}
+                    ✅ Candidate Passed
+                {% else %}
+                    ❌ Candidate Failed
+                {% endif %}
+            </h2>
+            <p>{{ decision_reason }}</p>
+            <span class="confidence">
+                ATS Confidence: {{ "%.0f"|format(confidence * 100) }}%
+            </span>
+        </div>
+
+        <!-- ===== NEW: METRIC CARDS ===== -->
+        <div class="metric-card">
+            <h3>JD Coverage</h3>
+            <p>{{ jd_coverage }}%</p>
+        </div>
+        <div class="metric-card risk {{ hiring_risk|lower }}">
+            <h3>Hiring Risk</h3>
+            <p>{{ hiring_risk }}</p>
+        </div>
+
+        <!-- ===== SCORE SUMMARY ===== -->
         <div class="score-header">
             <h2>Final Score</h2>
             <span id="final-score">{{ "%.1f"|format(score * 100) }}%</span>
@@ -128,32 +149,76 @@
 
         <div class="scores">
             <div class="score-box">
-                <span class="score-title">Quality</span>
-                <span>{{ "%.1f"|format(quality * 100) }}%</span>
+                <span>Quality</span>
+                <strong>{{ "%.1f"|format(quality * 100) }}%</strong>
             </div>
             <div class="score-box">
-                <span class="score-title">Job Match</span>
-                <span>{{ "%.1f"|format(match * 100) }}%</span>
+                <span>Job Match</span>
+                <strong>{{ "%.1f"|format(match * 100) }}%</strong>
             </div>
         </div>
 
-        <!-- Skills Chart -->
-        <div id="skills-chart" class="chart-container"></div>
+        <!-- ===== NEW: FAILURE REASONS ===== -->
+        {% if status == "FAIL" and failure_reasons %}
+        <div class="failure-box">
+            <h3>Why this resume failed</h3>
+            <ul>
+                {% for reason in failure_reasons %}
+                    <li>{{ reason }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
 
-        <!-- Top Skills -->
+        <!-- ===== NEW: AI EXPLANATION ===== -->
+        {% if explainability %}
+        <div class="explain-box">
+            <h3>AI Decision Explanation</h3>
+            <p><strong>Resume Quality:</strong> {{ explainability.quality_explanation }}</p>
+            <p><strong>Job Match:</strong> {{ explainability.match_explanation }}</p>
+            <p><strong>Coverage:</strong> {{ explainability.coverage_explanation }}</p>
+            <p><strong>Final Decision:</strong> {{ explainability.decision_explanation }}</p>
+        </div>
+        {% endif %}
+
+        <!-- ===== SKILLS ===== -->
         <div class="skills-list">
-            <h3>Top Skills</h3>
+            <h3>Matched Skills</h3>
             <ul>
                 {% for skill in top_skills[:5] %}
-                    <li>{{ skill.name }} ({{ "%.0f"|format(skill.score * 100) }}%)</li>
+                    <li>{{ skill.name }}</li>
                 {% endfor %}
             </ul>
         </div>
 
-        <!-- Heatmap -->
+        <!-- ===== SKILL GAPS ===== -->
+        {% if missing_skills %}
+        <div class="gap-box">
+            <h3>Missing Skills</h3>
+            <ul>
+                {% for skill in missing_skills %}
+                    <li>{{ skill }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <!-- ===== RECOMMENDATIONS ===== -->
+        {% if recommendations %}
+        <div class="recommendations">
+            <h3>Improvement Suggestions</h3>
+            <ul>
+                {% for tip in recommendations %}
+                    <li>{{ tip }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <!-- ===== HEATMAP ===== -->
         {% if heatmap %}
         <div class="heatmap glass-card">
-            <h3>Resume ↔ Job Description Match</h3>
+            <h3>Resume ↔ JD Keyword Match</h3>
             <div class="heatmap-words">
                 {% for word in heatmap %}
                     <span class="heat-word">{{ word }}</span>
@@ -162,52 +227,32 @@
         </div>
         {% endif %}
 
-        <!-- Preview -->
+        <!-- ===== PREVIEW ===== -->
         <div class="preview">
             <h3>Resume Preview</h3>
             <p>{{ preview }}</p>
         </div>
 
-        <!-- Actions -->
-        <div class="actions">
-            <a href="/download/{{ report }}" class="download-btn">
-                Download PDF Report
-            </a>
-
-            <button type="button" class="clear-btn" onclick="location.reload()">
-                New Analysis
-            </button>
+        <!-- ===== ACTIONS ===== -->
+        <div class="actions" style="text-align:center">
+            <a href="/download/{{ report }}" class="download-btn">Download Report</a>
+            <a href="{{ url_for('clear') }}" class="clear-btn">New Analysis</a>
         </div>
 
     </section>
-
-    <script>
-        if (typeof renderSkillsChart === "function") {
-            renderSkillsChart();
-        }
-    </script>
     {% endif %}
-
-    <!-- Status -->
-    <div class="status">
-        Models:
-        {% if success %} Loaded {% else %} Not trained {% endif %}
-    </div>
 
 </div>
 
-<!-- ================= JD AUTO-FILL ================= -->
+<!-- JD Autofill -->
 <script>
     const templates = {{ job_templates | tojson }};
-    const roleSelect = document.getElementById("job-role");
-    const jdBox = document.getElementById("job-desc");
-
-    if (roleSelect) {
-        roleSelect.addEventListener("change", () => {
-            const role = roleSelect.value;
-            if (templates[role]) {
-                jdBox.value = templates[role];
-            }
+    const jobRoleSelect = document.getElementById("job-role");
+    const jobDescTextarea = document.getElementById("job-desc");
+    
+    if (jobRoleSelect && jobDescTextarea) {
+        jobRoleSelect.addEventListener("change", e => {
+            jobDescTextarea.value = templates[e.target.value] || "";
         });
     }
 </script>
