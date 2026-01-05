@@ -12,6 +12,15 @@ from sklearn.metrics.pairwise import cosine_similarity
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet
+import spacy
+from spacy.cli import download
+
+try:
+    nlp = spacy.load("en_core_web_sm")
+except OSError:
+    download("en_core_web_sm")
+    nlp = spacy.load("en_core_web_sm")
+
 
 # ================= APP SETUP =================
 app = Flask(__name__)
@@ -443,3 +452,4 @@ def health():
 # ================= RUN =================
 if __name__ == "__main__":
     app.run(debug=True)
+
