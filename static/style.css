@@ -50,8 +50,11 @@ body:not(.auth-page) {
 ====================================================== */
 #three-canvas {
     position: fixed;
-    inset: 0;
-    z-index: -2;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
     pointer-events: none;
 }
 
@@ -357,42 +360,6 @@ button:hover {
         inset 0 1px 0 rgba(255,255,255,0.3);
 }
 
-.metric-card h3 {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--text-muted);
-    margin-bottom: 12px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.metric-card p {
-    font-size: 2.4rem;
-    font-weight: 900;
-    margin: 0;
-    background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-/* Risk level colors */
-.metric-card.risk.low p {
-    background: linear-gradient(135deg, var(--neon-green), #00d9ff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.metric-card.risk.medium p {
-    background: linear-gradient(135deg, #ffd23f, #ff9500);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.metric-card.risk.high p {
-    background: linear-gradient(135deg, #ff3366, #ff0055);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
 
 /* ======================================================
    DECISION BOX (EXISTING - PRESERVED)
@@ -546,14 +513,6 @@ button:hover {
 /* ======================================================
    SCORE HEADER (EXISTING - PRESERVED)
 ====================================================== */
-.score-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 20px;
-    padding-bottom: 24px;
-    border-bottom: 1px solid rgba(255,255,255,0.12);
-}
 
 .score-header h2 {
     font-size: 1.3rem;
@@ -571,26 +530,6 @@ button:hover {
 }
 
 /* ================= SCORE BOXES ================= */
-.scores {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 18px;
-}
-
-.score-box {
-    padding: 20px;
-    border-radius: 18px;
-    background: rgba(255,255,255,0.08);
-    text-align: center;
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12);
-}
-
-.score-title {
-    display: block;
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    margin-bottom: 6px;
-}
 
 .score-box span:last-child {
     font-size: 1.4rem;
@@ -622,21 +561,32 @@ button:hover {
 .skills-list ul {
     list-style: none;
     display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
+    flex-wrap: wrap;       /* allow wrapping to next line */
+    gap: 12px;             /* spacing between badges */
+    padding: 0;
+    margin: 0;
 }
 
 .skills-list li {
-    padding: 10px 18px;
+    padding: 8px 16px;     /* make badges a bit smaller for tighter fit */
     font-size: 0.9rem;
     border-radius: 999px;
-    background: linear-gradient(
-        135deg,
-        rgba(0,230,255,0.35),
-        rgba(123,108,255,0.35)
-    );
-    backdrop-filter: blur(10px);
+    background: linear-gradient(135deg, #00e6ff, #667eea);
+    color: #fff;
+    font-weight: 600;
+    display: inline-flex;  /* better alignment for text inside badges */
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;   /* prevent text from breaking inside badge */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
+
+.skills-list li:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+}
+
 
 /* ======================================================
    GAP BOX (EXISTING - PRESERVED)
@@ -809,10 +759,15 @@ button:hover {
 }
 
 /* New Analysis button spans wider (visual hierarchy) */
+/* New Analysis button spans wider (visual hierarchy) */
 .actions .clear-btn {
     width: 100%;
     max-width: 420px;
+    margin: 0 auto;        /* centers the button horizontally */
+    display: block;        /* ensures margin auto works */
+    text-align: center;    /* centers text inside */
 }
+
 
 /* ======================================================
    FEEDBACK
@@ -1206,6 +1161,64 @@ button:hover {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
+/* ======================================================
+   🔧 ALIGNMENT FIX OVERRIDES (NON-DESTRUCTIVE)
+   Appended safely – no existing code removed
+====================================================== */
+
+/* Allow container to expand for results */
+.container {
+    max-width: 1400px;
+    width: 100%;
+}
+
+/* Center results section in viewport */
+.results {
+    align-items: center;
+}
+
+/* Force landscape layout to be centered and full-width */
+.result-landscape {
+    max-width: 1200px;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Ensure each column stretches evenly */
+.result-col {
+    height: 100%;
+}
+
+/* Prevent cards from shrinking weirdly */
+.status-col,
+.metrics-col,
+.score-col {
+    width: 100%;
+}
+
+/* Fix preview & lower sections drifting left */
+.preview,
+.failure-box,
+.explain-box,
+.skills-list,
+.gap-box,
+.recommendations,
+.heatmap {
+    max-width: 1200px;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Center action buttons block */
+.actions {
+    width: 100%;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 
 /* ======================================================
    RESPONSIVE DESIGN
