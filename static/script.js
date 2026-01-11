@@ -92,7 +92,7 @@ function init3DCanvas() {
         color: 0x00e6ff,
         size: 0.05,  // Increased from 0.008 - try values between 0.01 and 0.1
         transparent: true,
-        opacity: 0.8
+        opacity: 0.8,
         sizeAttenuation: true
     });
 
@@ -232,3 +232,4 @@ function initSpinnerDots() {
         dots.textContent = ".".repeat(step);
     }, 300);
 }
+
