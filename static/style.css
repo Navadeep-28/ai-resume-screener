@@ -1219,6 +1219,27 @@ button:hover {
     margin-right: auto;
 }
 
+.mode-switch {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.mode-btn {
+    padding: 0.6rem 1.2rem;
+    border-radius: 20px;
+    border: none;
+    cursor: pointer;
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+}
+
+.mode-btn.active {
+    background: #4f9cff;
+    color: #000;
+}
+
+
 
 /* ======================================================
    RESPONSIVE DESIGN
