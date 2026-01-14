@@ -58,7 +58,7 @@
     <!-- ================= SINGLE RESUME FORM ================= -->
     
     {% if not success %}
-    <form method="POST" enctype="multipart/form-data" class="glass-card form-card">
+    <form method="POST" data-mode="single" enctype="multipart/form-data" class="glass-card form-card">
 
         <h2>
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 24px; height: 24px; display: inline-block; vertical-align: middle; margin-right: 8px;">
@@ -133,7 +133,7 @@
         </h2>
         <p>Upload multiple resumes and get ranked results instantly</p>
 
-        <form method="POST" action="{{ url_for('batch_screen') }}" enctype="multipart/form-data">
+        <form method="POST" action="{{ url_for('batch_screen') }}" data-mode="batch" enctype="multipart/form-data">
             <div class="form-group">
                 <label class="field-label">
                     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -204,7 +204,7 @@
         </h2>
         <p>Find out which candidate fits the role better</p>
 
-        <form method="POST" action="{{ url_for('compare_resumes') }}" enctype="multipart/form-data">
+        <form method="POST" action="{{ url_for('compare_resumes') }}" data-mode="compare" enctype="multipart/form-data">
             <div class="form-row" style="display: flex; gap: 1rem; flex-wrap: wrap;">
                 <div class="form-group" style="flex: 1; min-width: 200px;">
                     <label class="field-label">
