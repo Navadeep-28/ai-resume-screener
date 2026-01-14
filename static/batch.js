@@ -1,5 +1,7 @@
-// ================= BATCH RESUME SCREENING =================
-document.addEventListener("DOMContentLoaded", () => {
+// static/batch.js
+// ================= BATCH RESUME SCREENING (ES MODULE) =================
+
+export function initBatchScreening() {
     const batchForm = document.querySelector('form[action="/batch-screen"]');
     if (!batchForm) return;
 
@@ -8,29 +10,38 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const formData = new FormData(batchForm);
 
-        const res = await fetch("/batch-screen", {
-            method: "POST",
-            body: formData
-        });
+        try {
+            const res = await fetch("/batch-screen", {
+                method: "POST",
+                body: formData
+            });
 
-        const data = await res.json();
+            const data = await res.json();
 
-        let output = `<h3>📊 Ranked Resumes</h3><ol>`;
-        data.ranked_results.forEach(r => {
-            output += `
-                <li>
-                    <strong>${r.filename}</strong><br>
-                    Final Score: ${(r.final * 100).toFixed(1)}%<br>
-                    JD Coverage: ${r.coverage}%
-                </li>
-            `;
-        });
-        output += `</ol>`;
+            let output = `<h3>📊 Ranked Resumes</h3><ol>`;
+            data.ranked_results.forEach(r => {
+                output += `
+                    <li>
+                        <strong>${r.filename}</strong><br>
+                        Final Score: ${(r.final * 100).toFixed(1)}%<br>
+                        JD Coverage: ${r.coverage}%
+                    </li>
+                `;
+            });
+            output += `</ol>`;
 
-        const resultBox = document.createElement("div");
-        resultBox.className = "glass-card";
-        resultBox.innerHTML = output;
+            let resultBox = document.getElementById("batch-results");
+            if (!resultBox) {
+                resultBox = document.createElement("div");
+                resultBox.id = "batch-results";
+                resultBox.className = "glass-card";
+                batchForm.parentElement.appendChild(resultBox);
+            }
 
-        batchForm.parentElement.appendChild(resultBox);
+            resultBox.innerHTML = output;
+
+        } catch (err) {
+            console.error("Batch screening failed:", err);
+        }
     });
-});
+}
