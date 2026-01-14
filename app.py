@@ -12,9 +12,9 @@ from sklearn.metrics.pairwise import cosine_similarity
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet
-import spacy
 from spacy.cli import download
 
+# ================= NLP =================
 try:
     nlp = spacy.load("en_core_web_sm")
 except OSError:
@@ -31,8 +31,6 @@ DB = "users.db"
 
 os.makedirs(UPLOAD, exist_ok=True)
 os.makedirs("models", exist_ok=True)
-
-nlp = spacy.load("en_core_web_sm")
 
 # ================= JOB DESCRIPTION TEMPLATES =================
 JOB_TEMPLATES = {
@@ -190,6 +188,38 @@ try:
 except Exception as e:
     print("⚠️ Models not loaded:", e)
     MODELS = False
+
+# =========================================================
+# 🔥 CORE RESUME SCORING FUNCTION (REUSABLE)
+# =========================================================
+def score_resume(resume_text, job_desc):
+    """Reusable function to score a resume against a job description"""
+    clean_resume = clean_text(resume_text)
+    clean_jd = clean_text(job_desc)
+
+    q = model_general.predict(
+        tfidf_general.transform([clean_resume])
+    )[0]
+
+    resume_vec = tfidf_match.transform([clean_resume])
+    jd_vec = tfidf_match.transform([clean_jd])
+    m = cosine_similarity(resume_vec, jd_vec)[0][0]
+
+    final = 0.6 * q + 0.4 * m
+
+    resume_keywords = extract_keywords(resume_text)
+    jd_keywords = extract_keywords(job_desc)
+
+    matched = resume_keywords & jd_keywords
+    coverage = round(len(matched) / max(len(jd_keywords), 1) * 100, 2)
+
+    return {
+        "final": float(final),
+        "quality": float(q),
+        "match": float(m),
+        "coverage": coverage,
+        "matched_skills": sorted(list(matched))[:10]
+    }
 
 # ================= AUTH ROUTES =================
 @app.route("/login", methods=["GET", "POST"])
@@ -436,9 +466,175 @@ def index():
         job_templates=JOB_TEMPLATES
     )
 
+# =========================================================
+# 🔥 BATCH RESUME SCREENING
+# =========================================================
+@app.route("/batch-screen", methods=["GET", "POST"])
+def batch_screen():
+    if not login_required():
+        return redirect(url_for("login"))
+
+    if request.method == "GET":
+        return render_template("batch_screen.html", job_templates=JOB_TEMPLATES)
+
+    # POST request - process batch
+    if not MODELS:
+        return jsonify({"error": "ML models not trained. Run train_model.py first."}), 500
+
+    files = request.files.getlist("resumes")
+    job_desc = request.form.get("job_desc", "")
+    job_role = request.form.get("job_role")
+
+    if job_role in JOB_TEMPLATES and not job_desc.strip():
+        job_desc = JOB_TEMPLATES[job_role]
+
+    results = []
+
+    for file in files:
+        if not file.filename.endswith(".pdf"):
+            continue
+
+        path = os.path.join(UPLOAD, file.filename)
+        file.save(path)
+
+        text = ""
+        with open(path, "rb") as f:
+            reader = PyPDF2.PdfReader(f)
+            for p in reader.pages:
+                if p.extract_text():
+                    text += p.extract_text()
+
+        os.remove(path)
+
+        if not text.strip():
+            continue
+
+        score = score_resume(text, job_desc)
+        score["filename"] = file.filename
+        
+        # Add decision based on thresholds
+        score["decision"] = "PASS" if score["final"] >= PASS_THRESHOLD and score["match"] >= MATCH_THRESHOLD else "FAIL"
+        
+        results.append(score)
+
+    ranked = sorted(results, key=lambda x: x["final"], reverse=True)
+
+    # Check if API request or form submission
+    if request.headers.get('Accept') == 'application/json':
+        return jsonify({
+            "total_resumes": len(ranked),
+            "ranked_results": ranked
+        })
+    
+    # Return HTML response for form submission
+    return render_template(
+        "batch_results.html",
+        total_resumes=len(ranked),
+        ranked_results=ranked,
+        job_desc=job_desc,
+        job_templates=JOB_TEMPLATES
+    )
+
+# =========================================================
+# 🔥 COMPARE TWO RESUMES
+# =========================================================
+@app.route("/compare-resumes", methods=["GET", "POST"])
+def compare_resumes():
+    if not login_required():
+        return redirect(url_for("login"))
+
+    if request.method == "GET":
+        return render_template("compare_resumes.html", job_templates=JOB_TEMPLATES)
+
+    # POST request - compare resumes
+    if not MODELS:
+        return jsonify({"error": "ML models not trained. Run train_model.py first."}), 500
+
+    job_desc = request.form.get("job_desc", "")
+    job_role = request.form.get("job_role")
+
+    if job_role in JOB_TEMPLATES and not job_desc.strip():
+        job_desc = JOB_TEMPLATES[job_role]
+
+    r1 = request.files.get("resume1")
+    r2 = request.files.get("resume2")
+
+    if not r1 or not r2:
+        return render_template(
+            "compare_resumes.html",
+            error="Please upload both resumes",
+            job_templates=JOB_TEMPLATES
+        )
+
+    def read_pdf(file):
+        text = ""
+        reader = PyPDF2.PdfReader(file)
+        for p in reader.pages:
+            if p.extract_text():
+                text += p.extract_text()
+        return text
+
+    text1 = read_pdf(r1)
+    text2 = read_pdf(r2)
+
+    if not text1.strip() or not text2.strip():
+        return render_template(
+            "compare_resumes.html",
+            error="Could not extract text from one or both PDFs",
+            job_templates=JOB_TEMPLATES
+        )
+
+    s1 = score_resume(text1, job_desc)
+    s2 = score_resume(text2, job_desc)
+
+    # Add filenames
+    s1["filename"] = r1.filename
+    s2["filename"] = r2.filename
+
+    # Determine winner
+    if s1["final"] > s2["final"]:
+        winner = r1.filename
+        winner_score = s1
+    else:
+        winner = r2.filename
+        winner_score = s2
+
+    # Generate detailed comparison
+    comparison = {
+        "winner": winner,
+        "resume_1": s1,
+        "resume_2": s2,
+        "score_difference": abs(s1["final"] - s2["final"]),
+        "reason": (
+            "Higher overall score and better skill coverage"
+            if abs(s1["final"] - s2["final"]) > 0.05
+            else "Scores are close; marginal skill alignment difference"
+        ),
+        "quality_comparison": (
+            f"{r1.filename} has better quality" if s1["quality"] > s2["quality"]
+            else f"{r2.filename} has better quality"
+        ),
+        "match_comparison": (
+            f"{r1.filename} matches job better" if s1["match"] > s2["match"]
+            else f"{r2.filename} matches job better"
+        )
+    }
+
+    # Check if API request or form submission
+    if request.headers.get('Accept') == 'application/json':
+        return jsonify(comparison)
+
+    # Return HTML response for form submission
+    return render_template(
+        "compare_results.html",
+        comparison=comparison,
+        job_desc=job_desc,
+        job_templates=JOB_TEMPLATES
+    )
+
 # ================= UTIL =================
 @app.route("/download/<f>")
-def download(f):
+def download_file(f):
     if not login_required():
         return redirect(url_for("login"))
     return send_file(os.path.join(UPLOAD, f), as_attachment=True)
@@ -447,13 +643,20 @@ def download(f):
 def health():
     return jsonify({
         "models_loaded": MODELS,
-        "auth": "enabled"
+        "auth": "enabled",
+        "batch_screening": True,
+        "resume_comparison": True,
+        "features": [
+            "single_resume_analysis",
+            "batch_screening",
+            "resume_comparison",
+            "pdf_report_generation",
+            "skill_gap_analysis",
+            "ats_decision_logic"
+        ]
     })
 
 # ================= RUN =================
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
-
-
