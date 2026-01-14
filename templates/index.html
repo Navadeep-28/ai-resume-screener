@@ -45,9 +45,17 @@
         <p>Upload a resume and evaluate it using NLP-based job matching</p>
     </header>
 
-    <!-- ================= FORM ================= -->
+    <!-- ================= SINGLE RESUME FORM ================= -->
     {% if not success %}
     <form method="POST" enctype="multipart/form-data" class="glass-card form-card">
+
+        <h2>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 24px; height: 24px; display: inline-block; vertical-align: middle; margin-right: 8px;">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+            </svg>
+            Single Resume Analysis
+        </h2>
 
         <div class="form-group">
             <label class="field-label">
@@ -90,11 +98,172 @@
                 </svg>
                 Job Description
             </label>
-            <textarea name="job_desc" id="job-desc" rows="5"></textarea>
+            <textarea name="job_desc" id="job-desc" rows="5" placeholder="Paste job description or select a role above"></textarea>
         </div>
 
-        <button type="submit" class="primary-btn">Analyze Resume</button>
+        <button type="submit" class="primary-btn">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 6px;">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+            </svg>
+            Analyze Resume
+        </button>
     </form>
+
+    <!-- ===================================================== -->
+    <!-- 🔥 BATCH RESUME SCREENING -->
+    <!-- ===================================================== -->
+    <section class="glass-card form-card" style="margin-top:2rem;">
+        <h2>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 24px; height: 24px; display: inline-block; vertical-align: middle; margin-right: 8px;">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>
+            Batch Resume Screening
+        </h2>
+        <p>Upload multiple resumes and get ranked results instantly</p>
+
+        <form method="POST" action="{{ url_for('batch_screen') }}" enctype="multipart/form-data">
+            <div class="form-group">
+                <label class="field-label">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    Upload Multiple Resumes (PDF)
+                </label>
+                <input type="file" name="resumes" accept=".pdf" multiple required>
+            </div>
+
+            <div class="form-group">
+                <label class="field-label">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                    </svg>
+                    Job Role
+                </label>
+                <select name="job_role" id="batch-job-role">
+                    <option value="">Select a job role</option>
+                    {% for key in job_templates %}
+                        <option value="{{ key }}">{{ key.replace('_',' ').title() }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="field-label">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <line x1="12" y1="9" x2="8" y2="9"></line>
+                    </svg>
+                    Job Description
+                </label>
+                <textarea name="job_desc" id="batch-job-desc" rows="4" placeholder="Paste job description or select a role above"></textarea>
+            </div>
+
+            <button type="submit" class="primary-btn">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 6px;">
+                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                    <path d="m9 14 2 2 4-4"></path>
+                </svg>
+                Run Batch Screening
+            </button>
+        </form>
+    </section>
+
+    <!-- ===================================================== -->
+    <!-- 🔥 COMPARE TWO RESUMES -->
+    <!-- ===================================================== -->
+    <section class="glass-card form-card" style="margin-top:2rem;">
+        <h2>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 24px; height: 24px; display: inline-block; vertical-align: middle; margin-right: 8px;">
+                <path d="M16 3h5v5"></path>
+                <path d="M8 3H3v5"></path>
+                <path d="M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3"></path>
+                <path d="m15 9 6-6"></path>
+            </svg>
+            Compare Two Resumes
+        </h2>
+        <p>Find out which candidate fits the role better</p>
+
+        <form method="POST" action="{{ url_for('compare_resumes') }}" enctype="multipart/form-data">
+            <div class="form-row" style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <div class="form-group" style="flex: 1; min-width: 200px;">
+                    <label class="field-label">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        Resume 1 (PDF)
+                    </label>
+                    <input type="file" name="resume1" accept=".pdf" required>
+                </div>
+
+                <div class="form-group" style="flex: 1; min-width: 200px;">
+                    <label class="field-label">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        Resume 2 (PDF)
+                    </label>
+                    <input type="file" name="resume2" accept=".pdf" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="field-label">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                    </svg>
+                    Job Role
+                </label>
+                <select name="job_role" id="compare-job-role">
+                    <option value="">Select a job role</option>
+                    {% for key in job_templates %}
+                        <option value="{{ key }}">{{ key.replace('_',' ').title() }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="field-label">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <line x1="12" y1="9" x2="8" y2="9"></line>
+                    </svg>
+                    Job Description
+                </label>
+                <textarea name="job_desc" id="compare-job-desc" rows="4" placeholder="Paste job description or select a role above"></textarea>
+            </div>
+
+            <button type="submit" class="primary-btn">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 6px;">
+                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+                Compare Resumes
+            </button>
+        </form>
+    </section>
     {% endif %}
 
     {% if error %}
@@ -167,55 +336,136 @@
         </div>
     </section>
 
-        <!-- ===== NEW: FAILURE REASONS ===== -->
-        {% if status == "FAIL" and failure_reasons %}
+        <!-- ===== FAILURE REASONS ===== -->
+        {% if status == "FAIL" and failure_reasons_enhanced %}
         <div class="failure-box glass-card">
-            <h3>Why this resume failed</h3>
+            <h3>
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 8px;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                Why this resume failed
+            </h3>
             <ul>
-                {% for reason in failure_reasons %}
+                {% for reason in failure_reasons_enhanced %}
+                    <li>{{ reason }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% elif status == "FAIL" and reasons %}
+        <div class="failure-box glass-card">
+            <h3>
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 8px;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                Why this resume failed
+            </h3>
+            <ul>
+                {% for reason in reasons %}
                     <li>{{ reason }}</li>
                 {% endfor %}
             </ul>
         </div>
         {% endif %}
 
-        <!-- ===== NEW: AI EXPLANATION ===== -->
+        <!-- ===== AI EXPLANATION ===== -->
         {% if explainability %}
         <div class="explain-box glass-card">
-            <h3>AI Decision Explanation</h3>
+            <h3>
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 8px;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                AI Decision Explanation
+            </h3>
             <p><strong>Resume Quality:</strong> {{ explainability.quality_explanation }}</p>
             <p><strong>Job Match:</strong> {{ explainability.match_explanation }}</p>
             <p><strong>Coverage:</strong> {{ explainability.coverage_explanation }}</p>
             <p><strong>Final Decision:</strong> {{ explainability.decision_explanation }}</p>
         </div>
+        {% elif explanation %}
+        <div class="explain-box glass-card">
+            <h3>
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 8px;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                AI Decision Explanation
+            </h3>
+            <p>{{ explanation }}</p>
+        </div>
         {% endif %}
 
-        <!-- ===== SKILLS ===== -->
+        <!-- ===== TOP SKILLS ===== -->
+        {% if top_skills %}
         <div class="skills-list glass-card">
-            <h3>Matched Skills</h3>
+            <h3>
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 8px;">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+                Top Matched Skills
+            </h3>
             <ul>
                 {% for skill in top_skills[:5] %}
-                    <li>{{ skill.name }}</li>
+                    <li>{{ skill.name }} <span class="skill-score">({{ "%.0f"|format(skill.score * 100) }}%)</span></li>
                 {% endfor %}
             </ul>
         </div>
+        {% endif %}
+
+        <!-- ===== MATCHED SKILLS FROM GAP ANALYSIS ===== -->
+        {% if matched_skills %}
+        <div class="matched-skills glass-card">
+            <h3>
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 8px;">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                Skills Found in Resume
+            </h3>
+            <div class="skill-tags">
+                {% for skill in matched_skills %}
+                    <span class="skill-tag match">{{ skill }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
 
         <!-- ===== SKILL GAPS ===== -->
         {% if missing_skills %}
         <div class="gap-box glass-card">
-            <h3>Missing Skills</h3>
-            <ul>
+            <h3>
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 8px;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                </svg>
+                Missing Skills
+            </h3>
+            <div class="skill-tags">
                 {% for skill in missing_skills %}
-                    <li>{{ skill }}</li>
+                    <span class="skill-tag missing">{{ skill }}</span>
                 {% endfor %}
-            </ul>
+            </div>
         </div>
         {% endif %}
 
         <!-- ===== RECOMMENDATIONS ===== -->
         {% if recommendations %}
         <div class="recommendations glass-card">
-            <h3>Improvement Suggestions</h3>
+            <h3>
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 8px;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                Improvement Suggestions
+            </h3>
             <ul>
                 {% for tip in recommendations %}
                     <li>{{ tip }}</li>
@@ -227,7 +477,16 @@
         <!-- ===== HEATMAP ===== -->
         {% if heatmap %}
         <div class="heatmap glass-card">
-            <h3>Resume ↔ JD Keyword Match</h3>
+            <h3>
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 8px;">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="3" y1="9" x2="21" y2="9"></line>
+                    <line x1="3" y1="15" x2="21" y2="15"></line>
+                    <line x1="9" y1="3" x2="9" y2="21"></line>
+                    <line x1="15" y1="3" x2="15" y2="21"></line>
+                </svg>
+                Resume ↔ JD Keyword Match
+            </h3>
             <div class="heatmap-words">
                 {% for word in heatmap %}
                     <span class="heat-word">{{ word }}</span>
@@ -237,30 +496,73 @@
         {% endif %}
 
         <!-- ===== PREVIEW ===== -->
+        {% if preview %}
         <div class="preview glass-card">
-            <h3>Resume Preview</h3>
+            <h3>
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 8px;">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                Resume Preview
+            </h3>
             <p>{{ preview }}</p>
         </div>
+        {% endif %}
 
         <!-- ===== ACTIONS ===== -->
         <div class="actions" style="text-align:center; margin-top: 2rem;">
-            <a href="/download/{{ report }}" class="download-btn">Download Report</a>
-            <a href="{{ url_for('clear') }}" class="clear-btn">New Analysis</a>
+            <a href="{{ url_for('download_file', f=report) }}" class="download-btn">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 6px;">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Download Report
+            </a>
+            <a href="{{ url_for('clear') }}" class="clear-btn">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 6px;">
+                    <polyline points="1 4 1 10 7 10"></polyline>
+                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                </svg>
+                New Analysis
+            </a>
         </div>
 
     {% endif %}
 
 </div>
 
-<!-- JD Autofill -->
+<!-- JD Autofill Script for All Forms -->
 <script>
     const templates = {{ job_templates | tojson }};
+    
+    // Single Resume Form
     const jobRoleSelect = document.getElementById("job-role");
     const jobDescTextarea = document.getElementById("job-desc");
     
     if (jobRoleSelect && jobDescTextarea) {
         jobRoleSelect.addEventListener("change", e => {
             jobDescTextarea.value = templates[e.target.value] || "";
+        });
+    }
+
+    // Batch Screening Form
+    const batchJobRole = document.getElementById("batch-job-role");
+    const batchJobDesc = document.getElementById("batch-job-desc");
+    
+    if (batchJobRole && batchJobDesc) {
+        batchJobRole.addEventListener("change", e => {
+            batchJobDesc.value = templates[e.target.value] || "";
+        });
+    }
+
+    // Compare Resumes Form
+    const compareJobRole = document.getElementById("compare-job-role");
+    const compareJobDesc = document.getElementById("compare-job-desc");
+    
+    if (compareJobRole && compareJobDesc) {
+        compareJobRole.addEventListener("change", e => {
+            compareJobDesc.value = templates[e.target.value] || "";
         });
     }
 </script>
@@ -277,10 +579,7 @@
 <script type="module">
     import * as THREE from 'three';
     
-    // Your Three.js code from script.js can be imported here
-    // or you can load it as a module
-    
-    // Example: Initialize Three.js scene
+    // Initialize Three.js scene
     const canvas = document.getElementById('three-canvas');
     if (canvas) {
         const scene = new THREE.Scene();
