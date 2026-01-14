@@ -300,9 +300,10 @@ def index():
             tfidf_general.transform([clean_resume])
         )[0]
 
-        m = model_match.predict(
-            tfidf_match.transform([clean_resume + " " + clean_jd])
-        )[0]
+        resume_vec = tfidf_match.transform([clean_resume])
+        jd_vec = tfidf_match.transform([clean_jd])
+        m = cosine_similarity(resume_vec, jd_vec)[0][0]
+
 
         final = 0.6 * q + 0.4 * m
         
@@ -453,5 +454,6 @@ def health():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
