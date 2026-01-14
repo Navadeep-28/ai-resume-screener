@@ -2,7 +2,7 @@
 // ================= BATCH RESUME SCREENING (ES MODULE) =================
 
 export function initBatchScreening() {
-    const batchForm = document.querySelector('form[action="/batch-screen"]');
+    const batchForm = document.querySelector('form[action="/batch_screen"]');
     if (!batchForm) return;
 
     batchForm.addEventListener("submit", async (e) => {
@@ -11,7 +11,7 @@ export function initBatchScreening() {
         const formData = new FormData(batchForm);
 
         try {
-            const res = await fetch("/batch-screen", {
+            const res = await fetch("/batch_screen", {
                 method: "POST",
                 body: formData
             });
@@ -30,10 +30,10 @@ export function initBatchScreening() {
             });
             output += `</ol>`;
 
-            let resultBox = document.getElementById("batch-results");
+            let resultBox = document.getElementById("batch_results");
             if (!resultBox) {
                 resultBox = document.createElement("div");
-                resultBox.id = "batch-results";
+                resultBox.id = "batch_results";
                 resultBox.className = "glass-card";
                 batchForm.parentElement.appendChild(resultBox);
             }
