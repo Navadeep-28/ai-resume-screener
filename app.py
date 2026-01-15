@@ -469,7 +469,7 @@ def index():
 # =========================================================
 # 🔥 BATCH RESUME SCREENING
 # =========================================================
-@app.route("/batch_screen", methods=["POST"])
+@app.route("/batch-screen", methods=["POST"])
 def batch_screen():
     if not login_required():
         return redirect(url_for("login"))
@@ -532,7 +532,7 @@ def batch_screen():
 # =========================================================
 # 🔥 COMPARE TWO RESUMES
 # =========================================================
-@app.route("/compare_resumes", methods=["POST"])
+@app.route("/compare-resumes", methods=["POST"])
 def compare_resumes():
     if not login_required():
         return redirect(url_for("login"))
@@ -613,4 +613,5 @@ def health():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
