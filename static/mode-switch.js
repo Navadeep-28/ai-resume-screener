@@ -1,8 +1,10 @@
 // static/mode-switch.js
+// ================= MODE SWITCH (SAFE ES MODULE) =================
+
 export function initModeSwitch() {
     const buttons = document.querySelectorAll(".mode-btn");
     const form = document.querySelector("form");
-    if (!form) return;
+    if (!form || buttons.length === 0) return;
 
     const singleInput = form.querySelector('input[name="resume"]');
     const batchBlock = form.querySelector(".mode-batch");
@@ -15,22 +17,24 @@ export function initModeSwitch() {
 
             const mode = btn.dataset.mode;
 
-            // Reset visibility
-            batchBlock.style.display = "none";
-            compareBlock.style.display = "none";
-            singleInput.style.display = "block";
+            // ---- SAFE RESET ----
+            if (batchBlock) batchBlock.style.display = "none";
+            if (compareBlock) compareBlock.style.display = "none";
+            if (singleInput) singleInput.style.display = "block";
 
-            // Reset form action
+            // Default action (single screening)
             form.action = "/";
 
+            // ---- MODE SWITCH ----
             if (mode === "batch") {
-                singleInput.style.display = "none";
-                batchBlock.style.display = "block";
+                if (singleInput) singleInput.style.display = "none";
+                if (batchBlock) batchBlock.style.display = "block";
                 form.action = "/batch-screen";
             }
 
             if (mode === "compare") {
-                compareBlock.style.display = "block";
+                if (singleInput) singleInput.style.display = "none";
+                if (compareBlock) compareBlock.style.display = "block";
                 form.action = "/compare-resumes";
             }
         });
