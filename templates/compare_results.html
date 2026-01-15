@@ -7,76 +7,6 @@
 
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
-    <style>
-        body {
-            background: #0b0f1a;
-            color: #e5e7eb;
-            font-family: 'Segoe UI', sans-serif;
-        }
-
-        .container {
-            max-width: 1000px;
-            margin: 40px auto;
-            padding: 24px;
-        }
-
-        h1 {
-            text-align: center;
-            color: #7dd3fc;
-            margin-bottom: 10px;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: #94a3b8;
-            margin-bottom: 30px;
-        }
-
-        .winner {
-            text-align: center;
-            font-size: 1.2rem;
-            margin-bottom: 25px;
-            color: #22c55e;
-            font-weight: 600;
-        }
-
-        #chart {
-            margin-bottom: 40px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: rgba(255, 255, 255, 0.04);
-            border-radius: 12px;
-            overflow: hidden;
-        }
-
-        th, td {
-            padding: 14px;
-            text-align: center;
-        }
-
-        th {
-            background: rgba(125, 211, 252, 0.15);
-            color: #7dd3fc;
-        }
-
-        tr:nth-child(even) {
-            background: rgba(255, 255, 255, 0.03);
-        }
-
-        .back-btn {
-            margin-top: 30px;
-            display: inline-block;
-            padding: 12px 20px;
-            border-radius: 10px;
-            background: linear-gradient(135deg, #38bdf8, #6366f1);
-            color: #000;
-            text-decoration: none;
-            font-weight: 600;
-        }
-    </style>
 </head>
 <body>
 
@@ -162,7 +92,6 @@
 
     Plotly.newPlot("chart", data, layout, { responsive: true });
 </script>
-<script type="module" src="{{ url_for('static', filename='js/background3d.js') }}"></script>
 <script type="module" src="{{ url_for('static', filename='script.js') }}"></script>
 
 
