@@ -46,9 +46,9 @@
     </header>
 
     <!-- ================= MODE SELECTOR ================= -->
-<div class="glass-card" style="margin-bottom:1.5rem; text-align:center;">
+<div class="glass-card" style="margin-bottom:1.5rem; text-align:center; {% if success %}display:none;{% endif %}">
     <h3>Choose Screening Mode</h3>
-    <div class="mode-switch">
+    <div class="mode-selector">
         <button type="button" class="mode-btn active" data-mode="single">Single Resume</button>
         <button type="button" class="mode-btn" data-mode="batch">Batch Screening</button>
         <button type="button" class="mode-btn" data-mode="compare">Compare Resumes</button>
@@ -58,7 +58,7 @@
     <!-- ================= SINGLE RESUME FORM ================= -->
     
     {% if not success %}
-    <form method="POST" data-mode="single" enctype="multipart/form-data" class="glass-card form-card">
+    <form method="POST" data-mode="single" enctype="multipart/form-data" class="glass-card form-card mode-section mode-single">
 
         <h2>
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 24px; height: 24px; display: inline-block; vertical-align: middle; margin-right: 8px;">
@@ -124,7 +124,7 @@
     <!-- ===================================================== -->
     <!-- 🔥 BATCH RESUME SCREENING -->
     <!-- ===================================================== -->
-    <section class="glass-card form-card" style="margin-top:2rem;">
+    <section class="glass-card form-card mode-section mode-batch" style="margin-top:2rem; display:none;">
         <h2>
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 24px; height: 24px; display: inline-block; vertical-align: middle; margin-right: 8px;">
                 <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
@@ -192,7 +192,7 @@
     <!-- ===================================================== -->
     <!-- 🔥 COMPARE TWO RESUMES -->
     <!-- ===================================================== -->
-    <section class="glass-card form-card" style="margin-top:2rem;">
+    <section class="glass-card form-card mode-section mode-compare" style="margin-top:2rem; display:none;">
         <h2>
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width: 24px; height: 24px; display: inline-block; vertical-align: middle; margin-right: 8px;">
                 <path d="M16 3h5v5"></path>
