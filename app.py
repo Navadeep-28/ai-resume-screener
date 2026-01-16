@@ -471,52 +471,74 @@ def index():
 # =========================================================
 @app.route("/batch-screen", methods=["POST"])
 def batch_screen():
-    if not login_required():
-        return redirect(url_for("login"))
+    try:
+        if not login_required():
+            return redirect(url_for("login"))
 
-    if not MODELS:
+        if not MODELS:
+            return render_template(
+                "batch_results.html",
+                error="ML models not loaded"
+            )
+
+        files = request.files.getlist("resumes")
+        job_desc = request.form.get("job_desc", "")
+        job_role = request.form.get("job_role")
+
+        if job_role in JOB_TEMPLATES and not job_desc.strip():
+            job_desc = JOB_TEMPLATES[job_role]
+
+        if not files:
+            return render_template(
+                "batch_results.html",
+                error="No resumes uploaded"
+            )
+
+        results = []
+
+        for file in files:
+            if not file.filename.lower().endswith(".pdf"):
+                continue
+
+            reader = PyPDF2.PdfReader(file)
+            text = ""
+            for page in reader.pages:
+                text += page.extract_text() or ""
+
+            if not text.strip():
+                continue
+
+            scores = score_resume(text, job_desc)
+
+            results.append({
+                "filename": file.filename,
+                "final": round(scores["final"] * 100, 1),
+                "quality": round(scores["quality"] * 100, 1),
+                "match": round(scores["match"] * 100, 1),
+                "coverage": scores["coverage"]
+            })
+
+        if not results:
+            return render_template(
+                "batch_results.html",
+                error="Could not extract text from uploaded resumes"
+            )
+
+        results.sort(key=lambda x: x["final"], reverse=True)
+
         return render_template(
             "batch_results.html",
-            ranked_results=[],
-            error="ML models not loaded"
+            ranked_results=results,
+            job_role=job_role
         )
 
-    files = request.files.getlist("resumes")
-    job_desc = request.form.get("job_desc", "")
-    job_role = request.form.get("job_role")
+    except Exception as e:
+        print("BATCH ERROR:", e)
+        return render_template(
+            "batch_results.html",
+            error="Internal error occurred during batch screening"
+        )
 
-    if job_role in JOB_TEMPLATES and not job_desc.strip():
-        job_desc = JOB_TEMPLATES[job_role]
-
-    results = []
-
-    for file in files:
-        if not file or not file.filename.endswith(".pdf"):
-            continue
-
-        reader = PyPDF2.PdfReader(file)
-        text = "".join(page.extract_text() or "" for page in reader.pages)
-
-        if not text.strip():
-            continue
-
-        scores = score_resume(text, job_desc)
-
-        results.append({
-            "filename": file.filename,
-            "final": round(scores["final"] * 100, 1),
-            "quality": round(scores["quality"] * 100, 1),
-            "match": round(scores["match"] * 100, 1),
-            "coverage": scores["coverage"]
-        })
-
-    results.sort(key=lambda x: x["final"], reverse=True)
-
-    return render_template(
-        "batch_results.html",
-        ranked_results=results,
-        job_role=job_role
-    )
 
 
 
@@ -529,50 +551,71 @@ def batch_screen():
 # =========================================================
 @app.route("/compare-resumes", methods=["POST"])
 def compare_resumes():
-    if not login_required():
-        return redirect(url_for("login"))
+    try:
+        if not login_required():
+            return redirect(url_for("login"))
 
-    if not MODELS:
+        if not MODELS:
+            return render_template(
+                "compare_results.html",
+                error="ML models not loaded"
+            )
+
+        r1 = request.files.get("resume1")
+        r2 = request.files.get("resume2")
+        job_desc = request.form.get("job_desc", "")
+        job_role = request.form.get("job_role")
+
+        if not r1 or not r2:
+            return render_template(
+                "compare_results.html",
+                error="Please upload both resumes"
+            )
+
+        if job_role in JOB_TEMPLATES and not job_desc.strip():
+            job_desc = JOB_TEMPLATES[job_role]
+
+        def extract_text(file):
+            reader = PyPDF2.PdfReader(file)
+            text = ""
+            for page in reader.pages:
+                text += page.extract_text() or ""
+            return text
+
+        text1 = extract_text(r1)
+        text2 = extract_text(r2)
+
+        if not text1.strip() or not text2.strip():
+            return render_template(
+                "compare_results.html",
+                error="Could not extract text from one or both resumes"
+            )
+
+        s1 = score_resume(text1, job_desc)
+        s2 = score_resume(text2, job_desc)
+
         return render_template(
             "compare_results.html",
-            error="ML models not loaded"
+            resume_1={
+                "final": round(s1["final"] * 100, 1),
+                "match": round(s1["match"] * 100, 1),
+                "coverage": s1["coverage"]
+            },
+            resume_2={
+                "final": round(s2["final"] * 100, 1),
+                "match": round(s2["match"] * 100, 1),
+                "coverage": s2["coverage"]
+            },
+            winner="Resume 1" if s1["final"] > s2["final"] else "Resume 2"
         )
 
-    r1 = request.files.get("resume1")
-    r2 = request.files.get("resume2")
-    job_desc = request.form.get("job_desc", "")
-    job_role = request.form.get("job_role")
-
-    if not r1 or not r2:
+    except Exception as e:
+        print("COMPARE ERROR:", e)
         return render_template(
             "compare_results.html",
-            error="Please upload both resumes"
+            error="Internal error occurred while comparing resumes"
         )
 
-    if job_role in JOB_TEMPLATES and not job_desc.strip():
-        job_desc = JOB_TEMPLATES[job_role]
-
-    def extract_text(file):
-        reader = PyPDF2.PdfReader(file)
-        return "".join(page.extract_text() or "" for page in reader.pages)
-
-    s1 = score_resume(extract_text(r1), job_desc)
-    s2 = score_resume(extract_text(r2), job_desc)
-
-    return render_template(
-        "compare_results.html",
-        resume_1={
-            "final": round(s1["final"] * 100, 1),
-            "match": round(s1["match"] * 100, 1),
-            "coverage": s1["coverage"]
-        },
-        resume_2={
-            "final": round(s2["final"] * 100, 1),
-            "match": round(s2["match"] * 100, 1),
-            "coverage": s2["coverage"]
-        },
-        winner="Resume 1" if s1["final"] > s2["final"] else "Resume 2"
-    )
 
 
 
@@ -607,6 +650,7 @@ def health():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
