@@ -1,28 +1,40 @@
-{% extends "base.html" %}
-{% block content %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Resume Comparison</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
 
-<h2>Resume Comparison</h2>
+<div class="container">
+
+<h2>Resume Comparison Results</h2>
 
 {% if error %}
-<p class="error">{{ error }}</p>
+    <div class="glass-card error">{{ error }}</div>
 {% else %}
 <section class="results glass-card result-landscape">
     <div class="result-col">
         <h3>Resume 1</h3>
-        <p>Final: {{ resume_1.final }}%</p>
-        <p>Match: {{ resume_1.match }}%</p>
-        <p>Coverage: {{ resume_1.coverage }}%</p>
+        <p>Final Score: {{ resume_1.final }}%</p>
+        <p>Job Match: {{ resume_1.match }}%</p>
+        <p>JD Coverage: {{ resume_1.coverage }}%</p>
     </div>
 
     <div class="result-col">
         <h3>Resume 2</h3>
-        <p>Final: {{ resume_2.final }}%</p>
-        <p>Match: {{ resume_2.match }}%</p>
-        <p>Coverage: {{ resume_2.coverage }}%</p>
+        <p>Final Score: {{ resume_2.final }}%</p>
+        <p>Job Match: {{ resume_2.match }}%</p>
+        <p>JD Coverage: {{ resume_2.coverage }}%</p>
     </div>
 </section>
 
 <h3>🏆 Winner: {{ winner }}</h3>
 {% endif %}
 
-{% endblock %}
+<a href="{{ url_for('clear') }}" class="clear-btn">New Comparison</a>
+
+</div>
+
+</body>
+</html>
