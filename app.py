@@ -520,10 +520,12 @@ def batch_screen():
     # Rank candidates (best first)
     results.sort(key=lambda x: x["final"], reverse=True)
 
-    return jsonify({
-        "ranked_results": results,
-        "job_role": job_role
-    })
+    return render_template(
+        "batch_results.html",
+        ranked_results=results,
+        job_role=job_role
+    )
+
 
 
 
@@ -568,19 +570,21 @@ def compare_resumes():
     s1 = score_resume(text1, job_desc)
     s2 = score_resume(text2, job_desc)
 
-    return jsonify({
-        "winner": "resume_1" if s1["final"] > s2["final"] else "resume_2",
-        "resume_1": {
+    return render_template(
+        "compare_results.html",
+        resume_1={
             "final": s1["final"],
             "match": s1["match"],
             "coverage": s1["coverage"]
         },
-        "resume_2": {
+        resume_2={
             "final": s2["final"],
             "match": s2["match"],
             "coverage": s2["coverage"]
-        }
-    })
+        },
+        winner="resume_1" if s1["final"] > s2["final"] else "resume_2"
+    )
+
 
 
 
@@ -612,6 +616,7 @@ def health():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
