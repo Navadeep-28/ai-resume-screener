@@ -472,7 +472,7 @@ def index():
 @app.route("/batch-screen", methods=["POST"])
 def batch_screen():
     if not login_required():
-        return redirect(url_for("login"))
+        return jsonify({"error": "Unauthorized"}), 401
 
     if not MODELS:
         return render_template(
@@ -522,11 +522,11 @@ def batch_screen():
     # Rank candidates (best first)
     results.sort(key=lambda x: x["final"], reverse=True)
 
-    return render_template(
-        "batch_results.html",
-        results=results,
-        job_role=job_role
-    )
+   return jsonify({
+    "ranked_results": results,
+    "job_role": job_role
+})
+
 
 
 # =========================================================
@@ -535,7 +535,7 @@ def batch_screen():
 @app.route("/compare-resumes", methods=["POST"])
 def compare_resumes():
     if not login_required():
-        return redirect(url_for("login"))
+        return jsonify({"error": "Unauthorized"}), 401
 
     if not MODELS:
         return render_template(
@@ -575,14 +575,20 @@ def compare_resumes():
 
     better = "Resume 1" if s1["final"] > s2["final"] else "Resume 2"
 
-    return render_template(
-        "compare_results.html",
-        resume1_score=round(s1["final"] * 100, 2),
-        resume2_score=round(s2["final"] * 100, 2),
-        resume1_match=round(s1["match"] * 100, 2),
-        resume2_match=round(s2["match"] * 100, 2),
-        better_candidate=better
-    )
+    return jsonify({
+    "winner": "resume_1" if s1["final"] > s2["final"] else "resume_2",
+    "resume_1": {
+        "final": s1["final"],
+        "match": s1["match"],
+        "coverage": s1["coverage"]
+    },
+    "resume_2": {
+        "final": s2["final"],
+        "match": s2["match"],
+        "coverage": s2["coverage"]
+    }
+})
+)
 
 
 # ================= UTIL =================
@@ -613,5 +619,6 @@ def health():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
