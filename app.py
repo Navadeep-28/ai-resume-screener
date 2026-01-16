@@ -482,7 +482,7 @@ def batch_screen():
         )
 
     # 🔑 FIX 1: match input name
-    files = request.files.getlist("resumes")
+    files = request.files.getlist("resume")
 
     if not files:
         return render_template(
@@ -647,6 +647,7 @@ def health():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
