@@ -1238,6 +1238,32 @@ button:hover {
     background: #4f9cff;
     color: #000;
 }
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 2rem auto;
+    padding: 1rem;
+}
+
+.page-btn {
+    padding: 0.5rem 0.9rem;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #fff;
+    background: rgba(255,255,255,0.12);
+    transition: 0.2s ease;
+}
+
+.page-btn:hover {
+    background: rgba(255,255,255,0.25);
+}
+
+.page-btn.active {
+    background: linear-gradient(135deg, #00e6ff, #667eea);
+    font-weight: bold;
+}
+
 
 
 
