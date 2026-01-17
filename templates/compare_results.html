@@ -1,49 +1,180 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Resume Comparison</title>
+    <meta charset="UTF-8">
+    <title>Resume Comparison Results</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
+
+<!-- ================= NAVBAR ================= -->
+<nav class="navbar glass-card">
+    <span class="brand">AI Resume Screener</span>
+
+    <div class="nav-right">
+        <span class="user-info">
+            {{ session.user }}
+            {% if session.role == "admin" %}
+                <span class="badge">ADMIN</span>
+            {% else %}
+                <span class="badge hr">HR</span>
+            {% endif %}
+        </span>
+        <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+    </div>
+</nav>
 
 <div class="container">
 
-<h2>Resume Comparison Results</h2>
+    <!-- ================= HEADER ================= -->
+    <header class="page-header">
+        <h1>⚖️ Resume Comparison</h1>
+        <p>AI-based candidate comparison using the same scoring logic</p>
+    </header>
 
-{% if error %}
-    <div class="glass-card error">{{ error }}</div>
-{% else %}
-<section class="results glass-card result-landscape">
-    <div class="result-col">
-        <h3>Resume 1</h3>
-        <p>Final Score: {{ resume_1.final }}%</p>
-        <p>Job Match: {{ resume_1.match }}%</p>
-        <p>JD Coverage: {{ resume_1.coverage }}%</p>
+    {% if error %}
+        <div class="error glass-card">{{ error }}</div>
+    {% else %}
+
+    <!-- ================= WINNER ================= -->
+    <div class="glass-card" style="text-align:center; margin-bottom:2rem;">
+        <h2>
+            🏆 Better Resume:
+            <span class="highlight">
+                {{ "Resume 1" if winner == "resume_1" else "Resume 2" }}
+            </span>
+        </h2>
     </div>
 
-    <div class="result-col">
-        <h3>Resume 2</h3>
-        <p>Final Score: {{ resume_2.final }}%</p>
-        <p>Job Match: {{ resume_2.match }}%</p>
-        <p>JD Coverage: {{ resume_2.coverage }}%</p>
+    <!-- ================= RESUME 1 ================= -->
+    <section class="results glass-card result-landscape">
+
+        <!-- LEFT -->
+        <div class="result-col status-col">
+            <div class="status-pill {{ 'pass' if winner == 'resume_1' else 'fail' }}">
+                {{ "WINNER" if winner == "resume_1" else "LOSES" }}
+            </div>
+
+            <div class="status-card">
+                <h3>Resume 1</h3>
+                <span class="confidence-chip">
+                    ATS Confidence: {{ (resume_1.final * 100)|round(0) }}%
+                </span>
+            </div>
+        </div>
+
+        <!-- CENTER -->
+        <div class="result-col metrics-col">
+            <div class="metric-card">
+                <span class="metric-label">JD Coverage</span>
+                <span class="metric-value blue">{{ resume_1.coverage }}%</span>
+            </div>
+
+            <div class="metric-card">
+                <span class="metric-label">Hiring Risk</span>
+                <span class="metric-value
+                    {% if resume_1.final < 0.6 %}danger
+                    {% elif resume_1.final < 0.75 %}warning
+                    {% else %}success{% endif %}">
+                    {% if resume_1.final < 0.6 %}HIGH
+                    {% elif resume_1.final < 0.75 %}MEDIUM
+                    {% else %}LOW{% endif %}
+                </span>
+            </div>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="result-col score-col">
+            <div class="final-score">
+                <span>Final Score</span>
+                <h2>{{ (resume_1.final * 100)|round(1) }}%</h2>
+            </div>
+
+            <div class="mini-scores">
+                <div class="mini-card">
+                    Job Match<br>
+                    <strong>{{ (resume_1.match * 100)|round(1) }}%</strong>
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+    <!-- ================= RESUME 2 ================= -->
+    <section class="results glass-card result-landscape">
+
+        <!-- LEFT -->
+        <div class="result-col status-col">
+            <div class="status-pill {{ 'pass' if winner == 'resume_2' else 'fail' }}">
+                {{ "WINNER" if winner == "resume_2" else "LOSES" }}
+            </div>
+
+            <div class="status-card">
+                <h3>Resume 2</h3>
+                <span class="confidence-chip">
+                    ATS Confidence: {{ (resume_2.final * 100)|round(0) }}%
+                </span>
+            </div>
+        </div>
+
+        <!-- CENTER -->
+        <div class="result-col metrics-col">
+            <div class="metric-card">
+                <span class="metric-label">JD Coverage</span>
+                <span class="metric-value blue">{{ resume_2.coverage }}%</span>
+            </div>
+
+            <div class="metric-card">
+                <span class="metric-label">Hiring Risk</span>
+                <span class="metric-value
+                    {% if resume_2.final < 0.6 %}danger
+                    {% elif resume_2.final < 0.75 %}warning
+                    {% else %}success{% endif %}">
+                    {% if resume_2.final < 0.6 %}HIGH
+                    {% elif resume_2.final < 0.75 %}MEDIUM
+                    {% else %}LOW{% endif %}
+                </span>
+            </div>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="result-col score-col">
+            <div class="final-score">
+                <span>Final Score</span>
+                <h2>{{ (resume_2.final * 100)|round(1) }}%</h2>
+            </div>
+
+            <div class="mini-scores">
+                <div class="mini-card">
+                    Job Match<br>
+                    <strong>{{ (resume_2.match * 100)|round(1) }}%</strong>
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+    {% endif %}
+
+    <!-- ================= ACTIONS ================= -->
+    <div class="actions" style="text-align:center; margin-top:2rem;">
+        <button id="export-compare-pdf" class="primary-btn">
+            Export Comparison as PDF
+        </button>
+
+        <a href="{{ url_for('clear') }}" class="clear-btn">
+            New Comparison
+        </a>
     </div>
-</section>
-
-<h3>🏆 Winner: {{ winner }}</h3>
-{% endif %}
-
-<a href="{{ url_for('clear') }}" class="clear-btn">New Comparison</a>
 
 </div>
-<button id="export-compare-pdf" class="primary-btn">
-    Export Comparison as PDF
-</button>
 
-<!-- Plotly (safe even if unused here) -->
-<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
-
-<!-- ES Modules -->
+<!-- ES MODULES -->
 <script type="module" src="{{ url_for('static', filename='main.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='export-compare-pdf.js') }}"></script>
 
 </body>
 </html>
