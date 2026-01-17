@@ -41,68 +41,98 @@
         <div class="error glass-card">{{ error }}</div>
     {% endif %}
 
-    <!-- ================= RESULTS ================= -->
-    {% if ranked_results %}
-        {% for r in ranked_results %}
-        <section class="results glass-card result-landscape">
+    <!-- ================= COMPARE FORM (ADDED) ================= -->
+    <form method="POST" action="{{ url_for('compare_from_batch') }}" id="batch-compare-form">
 
-            <!-- LEFT: STATUS -->
-            <div class="result-col status-col">
-                {% set status = "PASS" if r.final >= 65 else "FAIL" %}
-                <div class="status-pill {{ 'pass' if status == 'PASS' else 'fail' }}">
-                    {{ status }}
-                </div>
+        <input type="hidden" name="job_role" value="{{ job_role }}">
+        <input type="hidden" name="job_desc" value="{{ job_desc }}">
 
-                <div class="status-card">
-                    <h3>#{{ loop.index }} {{ r.filename }}</h3>
-                    <span class="confidence-chip">
-                        ATS Confidence: {{ r.final }}%
-                    </span>
-                </div>
-            </div>
+        <!-- ================= RESULTS ================= -->
+        {% if ranked_results %}
+            {% for r in ranked_results %}
+            <section class="results glass-card result-landscape">
 
-            <!-- CENTER: METRICS -->
-            <div class="result-col metrics-col">
-                <div class="metric-card">
-                    <span class="metric-label">JD Coverage</span>
-                    <span class="metric-value blue">{{ r.coverage }}%</span>
-                </div>
+                <!-- LEFT: STATUS -->
+                <div class="result-col status-col">
 
-                <div class="metric-card">
-                    <span class="metric-label">Hiring Risk</span>
-                    <span class="metric-value
-                        {% if r.final < 60 %}danger
-                        {% elif r.final < 75 %}warning
-                        {% else %}success{% endif %}">
-                        {% if r.final < 60 %}HIGH
-                        {% elif r.final < 75 %}MEDIUM
-                        {% else %}LOW{% endif %}
-                    </span>
-                </div>
-            </div>
+                    <!-- ✅ CHECKBOX (ADDED) -->
+                    <input
+                        type="checkbox"
+                        class="compare-checkbox"
+                        name="selected_resumes"
+                        value="{{ r.filename }}"
+                        style="margin-bottom:0.5rem;"
+                    >
 
-            <!-- RIGHT: SCORES -->
-            <div class="result-col score-col">
-                <div class="final-score">
-                    <span>Final Score</span>
-                    <h2>{{ r.final }}%</h2>
-                </div>
-
-                <div class="mini-scores">
-                    <div class="mini-card">
-                        Quality<br>
-                        <strong>{{ r.quality }}%</strong>
+                    {% set status = "PASS" if r.final >= 65 else "FAIL" %}
+                    <div class="status-pill {{ 'pass' if status == 'PASS' else 'fail' }}">
+                        {{ status }}
                     </div>
-                    <div class="mini-card">
-                        Job Match<br>
-                        <strong>{{ r.match }}%</strong>
+
+                    <div class="status-card">
+                        <h3>#{{ loop.index }} {{ r.filename }}</h3>
+                        <span class="confidence-chip">
+                            ATS Confidence: {{ r.final }}%
+                        </span>
                     </div>
                 </div>
-            </div>
 
-        </section>
-        {% endfor %}
-    {% endif %}
+                <!-- CENTER: METRICS -->
+                <div class="result-col metrics-col">
+                    <div class="metric-card">
+                        <span class="metric-label">JD Coverage</span>
+                        <span class="metric-value blue">{{ r.coverage }}%</span>
+                    </div>
+
+                    <div class="metric-card">
+                        <span class="metric-label">Hiring Risk</span>
+                        <span class="metric-value
+                            {% if r.final < 60 %}danger
+                            {% elif r.final < 75 %}warning
+                            {% else %}success{% endif %}">
+                            {% if r.final < 60 %}HIGH
+                            {% elif r.final < 75 %}MEDIUM
+                            {% else %}LOW{% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- RIGHT: SCORES -->
+                <div class="result-col score-col">
+                    <div class="final-score">
+                        <span>Final Score</span>
+                        <h2>{{ r.final }}%</h2>
+                    </div>
+
+                    <div class="mini-scores">
+                        <div class="mini-card">
+                            Quality<br>
+                            <strong>{{ r.quality }}%</strong>
+                        </div>
+                        <div class="mini-card">
+                            Job Match<br>
+                            <strong>{{ r.match }}%</strong>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+            {% endfor %}
+        {% endif %}
+
+        <!-- ================= COMPARE ACTION BAR (ADDED) ================= -->
+        <div class="glass-card" style="text-align:center; margin-top:2rem;">
+            <button
+                type="submit"
+                id="compare-btn"
+                class="primary-btn"
+                disabled
+            >
+                Compare Selected (2)
+            </button>
+        </div>
+
+    </form>
 
     <!-- ================= PAGINATION ================= -->
     {% if total_pages and total_pages > 1 %}
@@ -134,7 +164,8 @@
     </div>
 
 </div>
-<!-- Plotly (safe even if unused here) -->
+
+<!-- Plotly -->
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 
 <!-- ES Modules -->
