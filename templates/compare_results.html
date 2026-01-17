@@ -35,12 +35,16 @@
 <a href="{{ url_for('clear') }}" class="clear-btn">New Comparison</a>
 
 </div>
+<button id="export-compare-pdf" class="primary-btn">
+    Export Comparison as PDF
+</button>
+
 <!-- Plotly (safe even if unused here) -->
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 
 <!-- ES Modules -->
 <script type="module" src="{{ url_for('static', filename='main.js') }}"></script>
-<script type="module" src="{{ url_for('static', filename='compare.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='export-compare-pdf.js') }}"></script>
 
 </body>
 </html>
