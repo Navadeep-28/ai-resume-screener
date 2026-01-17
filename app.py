@@ -613,6 +613,49 @@ def compare_resumes():
         )
 
 
+@app.route("/compare-from-batch", methods=["POST"])
+def compare_from_batch():
+    if not login_required():
+        return redirect(url_for("login"))
+
+    filenames = request.form.getlist("selected_resumes")
+
+    if len(filenames) != 2:
+        return redirect(url_for("index"))
+
+    job_desc = request.form.get("job_desc", "")
+    job_role = request.form.get("job_role")
+
+    if job_role in JOB_TEMPLATES and not job_desc.strip():
+        job_desc = JOB_TEMPLATES[job_role]
+
+    texts = []
+
+    for fname in filenames:
+        path = os.path.join(UPLOAD, fname)
+        if not os.path.exists(path):
+            continue
+
+        with open(path, "rb") as f:
+            reader = PyPDF2.PdfReader(f)
+            text = ""
+            for page in reader.pages:
+                if page.extract_text():
+                    text += page.extract_text()
+            texts.append(text)
+
+    if len(texts) != 2:
+        return redirect(url_for("index"))
+
+    s1 = score_resume(texts[0], job_desc)
+    s2 = score_resume(texts[1], job_desc)
+
+    return render_template(
+        "compare_results.html",
+        resume_1=s1,
+        resume_2=s2,
+        winner="resume_1" if s1["final"] > s2["final"] else "resume_2"
+    )
 
 
 
@@ -646,6 +689,7 @@ def health():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
