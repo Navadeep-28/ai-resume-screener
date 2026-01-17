@@ -598,76 +598,54 @@ def export_batch_pdf():
 # =========================================================
 @app.route("/compare-resumes", methods=["POST"])
 def compare_resumes():
-    try:
-        if not login_required():
-            return redirect(url_for("login"))
+    if not login_required():
+        return redirect(url_for("login"))
 
-        if not MODELS:
-            return render_template(
-                "compare_results.html",
-                error="ML models not loaded"
-            )
-
-        r1 = request.files.get("resume1")
-        r2 = request.files.get("resume2")
-        job_desc = request.form.get("job_desc", "")
-        job_role = request.form.get("job_role")
-
-        if not r1 or not r2:
-            return render_template(
-                "compare_results.html",
-                error="Please upload both resumes"
-            )
-
-        if job_role in JOB_TEMPLATES and not job_desc.strip():
-            job_desc = JOB_TEMPLATES[job_role]
-
-        def extract_text(file):
-            reader = PyPDF2.PdfReader(file)
-            text = ""
-            for page in reader.pages:
-                text += page.extract_text() or ""
-            return text
-
-        text1 = extract_text(r1)
-        text2 = extract_text(r2)
-
-        if not text1.strip() or not text2.strip():
-            return render_template(
-                "compare_results.html",
-                error="Could not extract text from one or both resumes"
-            )
-
-        s1 = score_resume(text1, job_desc)
-        s2 = score_resume(text2, job_desc)
-        session["last_compare_result"] = {
-            "winner": winner,
-            "r1": resume_1,
-            "r2": resume_2
-        }
-
-
+    if not MODELS:
         return render_template(
             "compare_results.html",
-            resume_1={
-                "final": round(s1["final"] * 100, 1),
-                "match": round(s1["match"] * 100, 1),
-                "coverage": s1["coverage"]
-            },
-            resume_2={
-                "final": round(s2["final"] * 100, 1),
-                "match": round(s2["match"] * 100, 1),
-                "coverage": s2["coverage"]
-            },
-            winner="Resume 1" if s1["final"] > s2["final"] else "Resume 2"
+            error="⚠️ ML models not loaded."
         )
 
-    except Exception as e:
-        print("COMPARE ERROR:", e)
-        return render_template(
-            "compare_results.html",
-            error="Internal error occurred while comparing resumes"
+    r1 = request.files.get("resume1")
+    r2 = request.files.get("resume2")
+    job_desc = request.form.get("job_desc", "")
+    job_role = request.form.get("job_role")
+
+    if job_role in JOB_TEMPLATES and not job_desc.strip():
+        job_desc = JOB_TEMPLATES[job_role]
+
+    def extract_text(file):
+        reader = PyPDF2.PdfReader(file)
+        return " ".join(
+            p.extract_text() for p in reader.pages if p.extract_text()
         )
+
+    t1 = extract_text(r1)
+    t2 = extract_text(r2)
+
+    s1 = score_resume(t1, job_desc)
+    s2 = score_resume(t2, job_desc)
+
+    result = {
+        "resume_1": {
+            "final": round(s1["final"] * 100, 2),
+            "match": round(s1["match"] * 100, 2),
+            "coverage": s1["coverage"]
+        },
+        "resume_2": {
+            "final": round(s2["final"] * 100, 2),
+            "match": round(s2["match"] * 100, 2),
+            "coverage": s2["coverage"]
+        },
+        "winner": "resume_1" if s1["final"] > s2["final"] else "resume_2"
+    }
+
+    # 🔐 store for PDF export
+    session["last_compare_result"] = result
+
+    return render_template("compare_results.html", **result)
+
 
 @app.route("/export-compare-pdf")
 def export_compare_pdf():
@@ -791,6 +769,7 @@ def health():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
