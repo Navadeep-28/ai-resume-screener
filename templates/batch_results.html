@@ -41,138 +41,98 @@
         <div class="error glass-card">{{ error }}</div>
     {% endif %}
 
-    <!-- ================= COMPARE FORM (ADDED) ================= -->
-    <form method="POST" action="{{ url_for('compare_from_batch') }}" id="batch-compare-form">
+    <!-- ================= COMPARE FORM ================= -->
+    <form method="POST" action="/compare-from-batch" id="batch-compare-form">
 
-        <input type="hidden" name="job_role" value="{{ job_role }}">
-        <input type="hidden" name="job_desc" value="{{ job_desc }}">
+    <!-- ================= RESULTS ================= -->
+    {% if ranked_results %}
+        {% for r in ranked_results %}
+        <section class="results glass-card result-landscape">
 
-        <!-- ================= RESULTS ================= -->
-        {% if ranked_results %}
-            {% for r in ranked_results %}
-            <section class="results glass-card result-landscape">
+            <!-- CHECKBOX -->
+            <div class="compare-select">
+                <input
+                    type="checkbox"
+                    class="compare-checkbox"
+                    name="compare_ids"
+                    value="{{ loop.index0 }}"
+                >
+            </div>
 
-                <!-- LEFT: STATUS -->
-                <div class="result-col status-col">
-
-                    <!-- ✅ CHECKBOX (ADDED) -->
-                    <input
-                        type="checkbox"
-                        class="compare-checkbox"
-                        name="selected_resumes"
-                        value="{{ r.filename }}"
-                        style="margin-bottom:0.5rem;"
-                    >
-
-                    {% set status = "PASS" if r.final >= 65 else "FAIL" %}
-                    <div class="status-pill {{ 'pass' if status == 'PASS' else 'fail' }}">
-                        {{ status }}
-                    </div>
-
-                    <div class="status-card">
-                        <h3>#{{ loop.index }} {{ r.filename }}</h3>
-                        <span class="confidence-chip">
-                            ATS Confidence: {{ r.final }}%
-                        </span>
-                    </div>
+            <!-- LEFT -->
+            <div class="result-col status-col">
+                {% set status = "PASS" if r.final >= 65 else "FAIL" %}
+                <div class="status-pill {{ 'pass' if status == 'PASS' else 'fail' }}">
+                    {{ status }}
                 </div>
 
-                <!-- CENTER: METRICS -->
-                <div class="result-col metrics-col">
-                    <div class="metric-card">
-                        <span class="metric-label">JD Coverage</span>
-                        <span class="metric-value blue">{{ r.coverage }}%</span>
-                    </div>
+                <div class="status-card">
+                    <h3>#{{ loop.index }} {{ r.filename }}</h3>
+                    <span class="confidence-chip">
+                        ATS Confidence: {{ r.final }}%
+                    </span>
+                </div>
+            </div>
 
-                    <div class="metric-card">
-                        <span class="metric-label">Hiring Risk</span>
-                        <span class="metric-value
-                            {% if r.final < 60 %}danger
-                            {% elif r.final < 75 %}warning
-                            {% else %}success{% endif %}">
-                            {% if r.final < 60 %}HIGH
-                            {% elif r.final < 75 %}MEDIUM
-                            {% else %}LOW{% endif %}
-                        </span>
-                    </div>
+            <!-- CENTER -->
+            <div class="result-col metrics-col">
+                <div class="metric-card">
+                    <span class="metric-label">JD Coverage</span>
+                    <span class="metric-value blue">{{ r.coverage }}%</span>
                 </div>
 
-                <!-- RIGHT: SCORES -->
-                <div class="result-col score-col">
-                    <div class="final-score">
-                        <span>Final Score</span>
-                        <h2>{{ r.final }}%</h2>
-                    </div>
+                <div class="metric-card">
+                    <span class="metric-label">Hiring Risk</span>
+                    <span class="metric-value
+                        {% if r.final < 60 %}danger
+                        {% elif r.final < 75 %}warning
+                        {% else %}success{% endif %}">
+                        {% if r.final < 60 %}HIGH
+                        {% elif r.final < 75 %}MEDIUM
+                        {% else %}LOW{% endif %}
+                    </span>
+                </div>
+            </div>
 
-                    <div class="mini-scores">
-                        <div class="mini-card">
-                            Quality<br>
-                            <strong>{{ r.quality }}%</strong>
-                        </div>
-                        <div class="mini-card">
-                            Job Match<br>
-                            <strong>{{ r.match }}%</strong>
-                        </div>
-                    </div>
+            <!-- RIGHT -->
+            <div class="result-col score-col">
+                <div class="final-score">
+                    <span>Final Score</span>
+                    <h2>{{ r.final }}%</h2>
                 </div>
 
-            </section>
-            {% endfor %}
-        {% endif %}
+                <div class="mini-scores">
+                    <div class="mini-card">
+                        Quality<br><strong>{{ r.quality }}%</strong>
+                    </div>
+                    <div class="mini-card">
+                        Job Match<br><strong>{{ r.match }}%</strong>
+                    </div>
+                </div>
+            </div>
 
-        <!-- ================= COMPARE ACTION BAR (ADDED) ================= -->
-        <div class="glass-card" style="text-align:center; margin-top:2rem;">
-            <button
-                type="submit"
-                id="compare-btn"
-                class="primary-btn"
-                disabled
-            >
-                Compare Selected (2)
-            </button>
-        </div>
-
-    </form>
-
-    <!-- ================= PAGINATION ================= -->
-    {% if total_pages and total_pages > 1 %}
-    <div class="pagination glass-card">
-
-        {% if page > 1 %}
-            <a href="?page={{ page - 1 }}" class="page-btn">← Prev</a>
-        {% endif %}
-
-        {% for p in range(1, total_pages + 1) %}
-            <a href="?page={{ p }}"
-               class="page-btn {% if p == page %}active{% endif %}">
-               {{ p }}
-            </a>
+        </section>
         {% endfor %}
-
-        {% if page < total_pages %}
-            <a href="?page={{ page + 1 }}" class="page-btn">Next →</a>
-        {% endif %}
-
-    </div>
     {% endif %}
 
     <!-- ================= ACTIONS ================= -->
     <div class="actions" style="text-align:center; margin-top:2rem;">
+        <button type="submit" class="compare-btn">
+            🔍 Compare Selected (2)
+        </button>
+
         <a href="{{ url_for('clear') }}" class="clear-btn">
             New Batch Screening
         </a>
     </div>
 
+    </form>
+
 </div>
-<button id="export-batch-pdf" class="primary-btn">
-    Export Batch Results as PDF
-</button>
 
-
-<!-- Plotly -->
-<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
-
-<!-- ES Modules -->
+<!-- ES MODULES -->
 <script type="module" src="{{ url_for('static', filename='main.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='batch.js') }}"></script>
+
 </body>
 </html>
