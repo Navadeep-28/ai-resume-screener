@@ -644,7 +644,7 @@ def compare_resumes():
     # 🔐 store for PDF export
     session["last_compare_result"] = result
 
-    return render_template("compare_results.html", **result)
+    return render_template("compare_results.html", *result)
 
 
 @app.route("/export-compare-pdf")
@@ -669,9 +669,9 @@ def export_compare_pdf():
 
     table_data = [
         ["Metric", "Resume 1", "Resume 2"],
-        ["Final Score", data["r1"]["final"], data["r2"]["final"]],
-        ["Job Match", data["r1"]["match"], data["r2"]["match"]],
-        ["JD Coverage", data["r1"]["coverage"], data["r2"]["coverage"]],
+        ["Final Score", data["resume_1"]["final"], data["resume_2"]["final"]],
+        ["Job Match", data["resume_1"]["match"], data["resume_2"]["match"]],
+        ["JD Coverage", data["resume_1"]["coverage"], data["resume_2"]["coverage"]],
     ]
 
     table = Table(table_data)
@@ -710,7 +710,7 @@ def compare_from_batch():
     r1 = batch[int(selected[0])]
     r2 = batch[int(selected[1])]
 
-    session["last_compare_results"] = {
+    session["last_compare_result"] = {
         "resume_1": r1,
         "resume_2": r2,
         "winner": "resume_1" if r1["final"] > r2["final"] else "resume_2"
@@ -723,7 +723,6 @@ def compare_from_batch():
         winner="resume_1" if r1["final"] > r2["final"] else "resume_2",
         from_batch=True
     )
-
 
 
 
@@ -757,6 +756,7 @@ def health():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
