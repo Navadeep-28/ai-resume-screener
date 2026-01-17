@@ -10,8 +10,9 @@ import spacy
 from werkzeug.security import generate_password_hash, check_password_hash
 from sklearn.metrics.pairwise import cosine_similarity
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.pagesizes import letter
+from reportlab.lib.pagesizes import letter, A4
 from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib import colors
 from spacy.cli import download
 from math import ceil
 
@@ -535,7 +536,53 @@ def batch_screen():
         print("BATCH ERROR:", e)
         return render_template("batch_results.html", error="Internal server error")
 
+@app.route("/export-batch-pdf")
+def export_batch_pdf():
+    if not login_required():
+        return redirect("/login")
 
+    results = session.get("last_batch_results")
+    job_role = session.get("last_job_role", "N/A")
+
+    if not results:
+        return "No batch data to export", 400
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4)
+
+    styles = getSampleStyleSheet()
+    elements = []
+
+    elements.append(Paragraph(
+        f"<b>Batch Resume Screening Report</b><br/>Job Role: {job_role}",
+        styles["Title"]
+    ))
+
+    table_data = [["Rank", "Filename", "Final %", "Quality %", "Match %", "Coverage %"]]
+
+    for i, r in enumerate(results, start=1):
+        table_data.append([
+            i, r["filename"], r["final"], r["quality"], r["match"], r["coverage"]
+        ])
+
+    table = Table(table_data, repeatRows=1)
+    table.setStyle(TableStyle([
+        ("BACKGROUND", (0,0), (-1,0), colors.darkblue),
+        ("TEXTCOLOR", (0,0), (-1,0), colors.white),
+        ("GRID", (0,0), (-1,-1), 1, colors.grey),
+        ("ALIGN", (2,1), (-1,-1), "CENTER"),
+    ]))
+
+    elements.append(table)
+    doc.build(elements)
+
+    buffer.seek(0)
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name="batch_screening_results.pdf",
+        mimetype="application/pdf"
+    )
 
 
 
@@ -612,6 +659,51 @@ def compare_resumes():
             error="Internal error occurred while comparing resumes"
         )
 
+@app.route("/export-compare-pdf")
+def export_compare_pdf():
+    if not login_required():
+        return redirect("/login")
+
+    data = session.get("last_compare_result")
+    if not data:
+        return "No comparison data", 400
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4)
+    styles = getSampleStyleSheet()
+    elements = []
+
+    elements.append(Paragraph("<b>Resume Comparison Report</b>", styles["Title"]))
+    elements.append(Paragraph(
+        f"Winner: <b>{data['winner'].replace('_', ' ').upper()}</b>",
+        styles["Heading2"]
+    ))
+
+    table_data = [
+        ["Metric", "Resume 1", "Resume 2"],
+        ["Final Score", data["r1"]["final"], data["r2"]["final"]],
+        ["Job Match", data["r1"]["match"], data["r2"]["match"]],
+        ["JD Coverage", data["r1"]["coverage"], data["r2"]["coverage"]],
+    ]
+
+    table = Table(table_data)
+    table.setStyle(TableStyle([
+        ("GRID", (0,0), (-1,-1), 1, colors.grey),
+        ("BACKGROUND", (0,0), (-1,0), colors.black),
+        ("TEXTCOLOR", (0,0), (-1,0), colors.white),
+        ("ALIGN", (1,1), (-1,-1), "CENTER")
+    ]))
+
+    elements.append(table)
+    doc.build(elements)
+
+    buffer.seek(0)
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name="resume_comparison.pdf",
+        mimetype="application/pdf"
+    )
 
 @app.route("/compare-from-batch", methods=["POST"])
 def compare_from_batch():
@@ -689,6 +781,7 @@ def health():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
