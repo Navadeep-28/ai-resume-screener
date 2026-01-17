@@ -35,6 +35,12 @@
 <a href="{{ url_for('clear') }}" class="clear-btn">New Comparison</a>
 
 </div>
-<script type="module" src="{{ url_for('static', filename='script.js') }}"></script>
+<!-- Plotly (safe even if unused here) -->
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+<!-- ES Modules -->
+<script type="module" src="{{ url_for('static', filename='main.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='compare.js') }}"></script>
+
 </body>
 </html>
