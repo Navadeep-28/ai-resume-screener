@@ -525,6 +525,10 @@ def batch_screen():
         end = start + per_page
         paginated_results = results[start:end]
 
+        session["last_batch_results"] = results
+        session["last_job_role"] = job_role
+
+
         return render_template(
             "batch_results.html",
             ranked_results=paginated_results,
@@ -636,6 +640,12 @@ def compare_resumes():
 
         s1 = score_resume(text1, job_desc)
         s2 = score_resume(text2, job_desc)
+        session["last_compare_result"] = {
+            "winner": winner,
+            "r1": resume_1,
+            "r2": resume_2
+        }
+
 
         return render_template(
             "compare_results.html",
@@ -781,6 +791,7 @@ def health():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
