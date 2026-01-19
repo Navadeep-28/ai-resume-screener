@@ -4,19 +4,74 @@
     <meta charset="UTF-8">
     <title>Register | AI Resume Screener</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Styles -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+            min-height: 100vh;
+        }
+        
+        #three-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        /* Custom focus ring */
+        input:focus, select:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
+        }
+
+        /* Select arrow styling */
+        select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='rgba(255,255,255,0.5)'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1.5rem;
+        }
+    </style>
 </head>
-<body class="auth-page">
+
+<body class="min-h-screen flex items-center justify-center p-6 text-white overflow-hidden">
+
 <!-- 3D Background -->
 <canvas id="three-canvas"></canvas>
+
 <!-- ================= AUTH CONTAINER ================= -->
-<div class="auth-container glass-card">
+<div class="relative z-10 w-full max-w-md bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl shadow-black/20 animate-float">
+    
     <!-- ===== HEADER ===== -->
-    <div class="auth-header">
-        <div class="auth-icon register">
+    <div class="text-center mb-8">
+        <!-- Icon Container -->
+        <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-emerald-500/30 to-teal-500/30 rounded-2xl flex items-center justify-center border border-white/20 shadow-lg shadow-emerald-500/20">
             <!-- USER PLUS SVG ICON -->
-            <svg viewBox="0 0 24 24" fill="none">
+            <svg class="w-10 h-10 text-emerald-400" viewBox="0 0 24 24" fill="none">
                 <circle cx="12" cy="8" r="4"
                         stroke="currentColor" stroke-width="2"/>
                 <path d="M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6"
@@ -26,41 +81,102 @@
                       stroke-linecap="round"/>
             </svg>
         </div>
-        <h2 class="auth-title">Register</h2>
-        <p class="auth-subtitle">Create HR or Admin account</p>
+        
+        <h2 class="text-2xl font-bold mb-2 bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+            Register
+        </h2>
+        <p class="text-white/60 text-sm">
+            Create HR or Admin account
+        </p>
     </div>
+
     <!-- ===== ERROR ===== -->
     {% if error %}
-        <div class="error">{{ error }}</div>
+        <div class="mb-6 px-4 py-3 bg-red-500/20 border border-red-400/40 rounded-xl text-red-300 text-sm text-center flex items-center justify-center gap-2">
+            <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="15" y1="9" x2="9" y2="15"></line>
+                <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+            {{ error }}
+        </div>
     {% endif %}
+
     <!-- ===== FORM ===== -->
-    <form method="POST" class="auth-form">
-        <input
-            type="text"
-            name="username"
-            placeholder="Username"
-            required
-        >
-        <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            required
-        >
+    <form method="POST" class="space-y-4">
+        <!-- Username Input -->
+        <div class="relative">
+            <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                <svg class="w-5 h-5 text-white/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+            </div>
+            <input
+                type="text"
+                name="username"
+                placeholder="Username"
+                required
+                class="w-full pl-12 pr-4 py-4 bg-white/10 border border-white/20 rounded-2xl text-white placeholder-white/40 transition duration-200 hover:bg-white/15 focus:bg-white/15 focus:border-emerald-500/50"
+            >
+        </div>
+
+        <!-- Password Input -->
+        <div class="relative">
+            <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                <svg class="w-5 h-5 text-white/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+            </div>
+            <input
+                type="password"
+                name="password"
+                placeholder="Password"
+                required
+                class="w-full pl-12 pr-4 py-4 bg-white/10 border border-white/20 rounded-2xl text-white placeholder-white/40 transition duration-200 hover:bg-white/15 focus:bg-white/15 focus:border-emerald-500/50"
+            >
+        </div>
+
         <!-- Role Selection -->
-        <select name="role">
-            <option value="">HR (Default)</option>
-            <option value="admin">Admin</option>
-        </select>
-        <button type="submit">
+        <div class="relative">
+            <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                <svg class="w-5 h-5 text-white/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                </svg>
+            </div>
+            <select 
+                name="role"
+                class="w-full pl-12 pr-10 py-4 bg-white/10 border border-white/20 rounded-2xl text-white appearance-none cursor-pointer transition duration-200 hover:bg-white/15 focus:bg-white/15 focus:border-emerald-500/50"
+            >
+                <option value="" class="bg-slate-800 text-white">HR (Default)</option>
+                <option value="admin" class="bg-slate-800 text-white">Admin</option>
+            </select>
+        </div>
+
+        <!-- Submit Button -->
+        <button 
+            type="submit"
+            class="w-full py-4 px-6 mt-6 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl text-white font-semibold hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2"
+        >
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="8.5" cy="7" r="4"></circle>
+                <line x1="20" y1="8" x2="20" y2="14"></line>
+                <line x1="23" y1="11" x2="17" y2="11"></line>
+            </svg>
             Create Account
         </button>
     </form>
+
     <!-- ===== FOOTER ===== -->
-    <div class="auth-footer">
-        <p>
+    <div class="mt-8 pt-6 border-t border-white/10 text-center">
+        <p class="text-white/60 text-sm">
             Already registered?
-            <a href="{{ url_for('login') }}">Login</a>
+            <a href="{{ url_for('login') }}" 
+               class="text-emerald-400 hover:text-emerald-300 font-medium transition duration-200 hover:underline underline-offset-2">
+                Login
+            </a>
         </p>
     </div>
 </div>
