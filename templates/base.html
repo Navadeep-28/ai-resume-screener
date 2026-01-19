@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AI Resume Screener{% endblock %}</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'fade-in': 'fadeIn 0.5s ease-out forwards',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        glow: {
+                            '0%': { boxShadow: '0 0 20px rgba(234, 179, 8, 0.3)' },
+                            '100%': { boxShadow: '0 0 40px rgba(234, 179, 8, 0.6)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <!-- Plotly (for charts) -->
+    {% block head_scripts %}{% endblock %}
+</head>
+
+<body class="text-white min-h-screen">
+
+<!-- 3D Background Canvas -->
+<canvas id="three-canvas"></canvas>
+
+{% block navbar %}
+<!-- ================= NAVBAR ================= -->
+<nav class="
+    fixed top-6 left-1/2 -translate-x-1/2
+    w-[min(1100px,calc(100%-32px))]
+    flex items-center justify-between
+    px-8 py-4
+    rounded-3xl
+    bg-white/10
+    backdrop-blur-xl
+    border border-white/20
+    text-white
+    z-50
+    shadow-lg shadow-black/20
+">
+    <a href="{{ url_for('index') }}" class="text-lg font-bold tracking-wide flex items-center gap-2 hover:opacity-80 transition">
+        <svg class="w-6 h-6 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+        </svg>
+        AI Resume Screener
+    </a>
+
+    <div class="flex items-center gap-6">
+        {% if session.user %}
+        <span class="flex items-center gap-2 text-sm">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            {{ session.user }}
+
+            {% if session.role == "admin" %}
+                <span class="px-2 py-0.5 text-xs rounded-full bg-red-500/20 border border-red-400/40 text-red-300">
+                    ADMIN
+                </span>
+            {% else %}
+                <span class="px-2 py-0.5 text-xs rounded-full bg-blue-500/20 border border-blue-400/40 text-blue-300">
+                    HR
+                </span>
+            {% endif %}
+        </span>
+
+        <a href="{{ url_for('logout') }}"
+           class="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 transition duration-200 text-sm">
+            Logout
+        </a>
+        {% endif %}
+    </div>
+</nav>
+{% endblock %}
+
+<!-- Main Content -->
+<main class="relative z-10">
+    {% block content %}{% endblock %}
+</main>
+
+<!-- Notification Container -->
+<div id="notification-container" class="fixed top-24 right-6 z-[100] flex flex-col gap-3"></div>
+
+<!-- Three.js Import Map -->
+<script type="importmap">
+{
+    "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.167.1/build/three.module.js"
+    }
+}
+</script>
+
+<!-- Main Scripts -->
+<script type="module" src="{{ url_for('static', filename='script.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='main.js') }}"></script>
+
+{% block scripts %}{% endblock %}
+
+</body>
+</html>
