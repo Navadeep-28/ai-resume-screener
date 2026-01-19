@@ -1,176 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Batch Screening Results</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% extends "base.html" %}
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    animation: {
-                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        'float': 'float 6s ease-in-out infinite',
-                        'fade-in': 'fadeIn 0.5s ease-out forwards',
-                    },
-                    keyframes: {
-                        float: {
-                            '0%, 100%': { transform: 'translateY(0px)' },
-                            '50%': { transform: 'translateY(-10px)' },
-                        },
-                        fadeIn: {
-                            '0%': { opacity: '0', transform: 'translateY(20px)' },
-                            '100%': { opacity: '1', transform: 'translateY(0)' },
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+{% block title %}Batch Screening Results | AI Resume Screener{% endblock %}
 
-    <style>
-        body {
-            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
-            min-height: 100vh;
-        }
-        
-        #three-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-        }
-
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.5);
-        }
-
-        /* Custom checkbox styling */
-        .compare-checkbox {
-            appearance: none;
-            width: 24px;
-            height: 24px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            cursor: pointer;
-            transition: all 0.2s;
-            position: relative;
-        }
-        .compare-checkbox:hover {
-            border-color: rgba(99, 102, 241, 0.6);
-            background: rgba(99, 102, 241, 0.2);
-        }
-        .compare-checkbox:checked {
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-            border-color: #6366f1;
-        }
-        .compare-checkbox:checked::after {
-            content: '✓';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            font-size: 14px;
-            font-weight: bold;
-        }
-
-        /* Staggered animation for cards */
-        .result-card {
-            animation: fadeIn 0.5s ease-out forwards;
-            opacity: 0;
-        }
-        .result-card:nth-child(1) { animation-delay: 0.1s; }
-        .result-card:nth-child(2) { animation-delay: 0.2s; }
-        .result-card:nth-child(3) { animation-delay: 0.3s; }
-        .result-card:nth-child(4) { animation-delay: 0.4s; }
-        .result-card:nth-child(5) { animation-delay: 0.5s; }
-        .result-card:nth-child(6) { animation-delay: 0.6s; }
-        .result-card:nth-child(7) { animation-delay: 0.7s; }
-        .result-card:nth-child(8) { animation-delay: 0.8s; }
-        .result-card:nth-child(9) { animation-delay: 0.9s; }
-        .result-card:nth-child(10) { animation-delay: 1.0s; }
-    </style>
-</head>
-
-<body class="text-white min-h-screen">
-
-<!-- 3D Background -->
-<canvas id="three-canvas"></canvas>
-
-<!-- ================= NAVBAR ================= -->
-<nav class="
-    fixed top-6 left-1/2 -translate-x-1/2
-    w-[min(1100px,calc(100%-32px))]
-    flex items-center justify-between
-    px-8 py-4
-    rounded-3xl
-    bg-white/10
-    backdrop-blur-xl
-    border border-white/20
-    text-white
-    z-50
-    shadow-lg shadow-black/20
-">
-    <span class="text-lg font-bold tracking-wide flex items-center gap-2">
-        <svg class="w-6 h-6 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-            <polyline points="14 2 14 8 20 8"></polyline>
-            <line x1="16" y1="13" x2="8" y2="13"></line>
-            <line x1="16" y1="17" x2="8" y2="17"></line>
-        </svg>
-        AI Resume Screener
-    </span>
-
-    <div class="flex items-center gap-6">
-        <span class="flex items-center gap-2 text-sm">
-            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-            </svg>
-            {{ session.user }}
-
-            {% if session.role == "admin" %}
-                <span class="px-2 py-0.5 text-xs rounded-full bg-red-500/20 border border-red-400/40 text-red-300">
-                    ADMIN
-                </span>
-            {% else %}
-                <span class="px-2 py-0.5 text-xs rounded-full bg-blue-500/20 border border-blue-400/40 text-blue-300">
-                    HR
-                </span>
-            {% endif %}
-        </span>
-
-        <a href="{{ url_for('logout') }}"
-           class="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 transition duration-200 text-sm">
-            Logout
-        </a>
-    </div>
-</nav>
-
-<div class="relative z-10 max-w-6xl mx-auto pt-32 px-6 pb-12">
+{% block content %}
+<div class="max-w-6xl mx-auto pt-32 px-6 pb-12">
 
     <!-- ================= HEADER ================= -->
     <header class="text-center mb-10">
-        <div class="inline-flex items-center justify-center w-16 h-16 mb-4 bg-gradient-to-br from-purple-500/30 to-pink-500/30 rounded-2xl border border-white/20 shadow-lg shadow-purple-500/20">
+        <div class="inline-flex items-center justify-center w-16 h-16 mb-4 bg-gradient-to-br from-purple-500/30 to-pink-500/30 rounded-2xl border border-white/20 shadow-lg shadow-purple-500/20 animate-float">
             <svg class="w-8 h-8 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="18" y1="20" x2="18" y2="10"></line>
                 <line x1="12" y1="20" x2="12" y2="4"></line>
@@ -183,10 +20,16 @@
         <p class="text-white/70">
             Ranked candidates based on AI evaluation
         </p>
+        {% if total_results %}
+        <p class="text-white/50 text-sm mt-2">
+            Showing {{ ranked_results|length }} of {{ total_results }} candidates
+        </p>
+        {% endif %}
     </header>
 
+    <!-- ================= ERROR MESSAGE ================= -->
     {% if error %}
-        <div class="mb-6 px-6 py-4 bg-red-500/20 border border-red-400/40 rounded-2xl text-red-300 text-center flex items-center justify-center gap-3 backdrop-blur-xl">
+        <div class="mb-6 px-6 py-4 bg-red-500/20 border border-red-400/40 rounded-2xl text-red-300 text-center flex items-center justify-center gap-3 backdrop-blur-xl animate-fade-in">
             <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10"></circle>
                 <line x1="15" y1="9" x2="9" y2="15"></line>
@@ -197,15 +40,15 @@
     {% endif %}
 
     <!-- ================= COMPARE FORM ================= -->
-    <form method="POST" action="/compare-from-batch" id="batch-compare-form">
+    <form method="POST" action="{{ url_for('compare_from_batch') }}" id="batch-compare-form">
 
-        <!-- ✅ ADDED: tells backend this is batch-compare -->
+        <!-- Hidden field: tells backend this is batch-compare -->
         <input type="hidden" name="source" value="batch">
 
         {% if ranked_results %}
             <div class="space-y-4">
             {% for r in ranked_results %}
-            <section class="result-card bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-lg shadow-black/10 hover:bg-white/[0.12] transition duration-300">
+            <section class="result-card bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-lg shadow-black/10 hover:bg-white/[0.12] transition duration-300 glass-hover">
 
                 <div class="grid grid-cols-1 lg:grid-cols-[auto_1fr_1fr_1fr] gap-6 items-center">
 
@@ -297,24 +140,73 @@
             </section>
             {% endfor %}
             </div>
+
+            <!-- ================= PAGINATION ================= -->
+            {% if total_pages and total_pages > 1 %}
+            <div class="flex justify-center items-center gap-2 mt-8">
+                {% if page > 1 %}
+                <a href="?page={{ page - 1 }}" 
+                   class="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-white transition duration-200 flex items-center gap-2">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                    Prev
+                </a>
+                {% endif %}
+
+                <div class="flex items-center gap-1">
+                    {% for p in range(1, total_pages + 1) %}
+                        {% if p == page %}
+                        <span class="px-4 py-2 bg-purple-500/30 border border-purple-400/40 rounded-xl text-white font-bold">
+                            {{ p }}
+                        </span>
+                        {% else %}
+                        <a href="?page={{ p }}" 
+                           class="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-white transition duration-200">
+                            {{ p }}
+                        </a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                {% if page < total_pages %}
+                <a href="?page={{ page + 1 }}" 
+                   class="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-white transition duration-200 flex items-center gap-2">
+                    Next
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+
         {% else %}
-            <div class="text-center py-16 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl">
+            <!-- Empty State -->
+            <div class="text-center py-16 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl animate-fade-in">
                 <svg class="w-16 h-16 mx-auto mb-4 text-white/30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
                     <polyline points="13 2 13 9 20 9"></polyline>
                 </svg>
                 <p class="text-white/50 text-lg">No results to display</p>
                 <p class="text-white/30 text-sm mt-2">Upload resumes to start batch screening</p>
+                <a href="{{ url_for('index') }}" 
+                   class="inline-flex items-center gap-2 mt-6 px-6 py-3 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-400/40 rounded-2xl text-purple-300 transition duration-200">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Start Batch Screening
+                </a>
             </div>
         {% endif %}
 
         <!-- ================= ACTIONS ================= -->
+        {% if ranked_results %}
         <div class="flex flex-wrap justify-center gap-4 mt-10">
 
-            <button
-                type="button"
-                id="export-batch-pdf"
-                class="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-2xl text-white font-semibold hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-lg shadow-blue-500/25 flex items-center gap-2"
+            <a href="{{ url_for('export_batch_pdf') }}"
+               class="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-2xl text-white font-semibold hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-lg shadow-blue-500/25 flex items-center gap-2 btn-press"
             >
                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -323,19 +215,19 @@
                     <line x1="16" y1="17" x2="8" y2="17"></line>
                 </svg>
                 Export Batch Results PDF
-            </button>
+            </a>
 
             <button
                 type="submit"
                 id="compare-btn"
-                class="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 rounded-2xl text-white font-semibold hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-lg shadow-purple-500/25 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                class="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 rounded-2xl text-white font-semibold hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-lg shadow-purple-500/25 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 btn-press"
                 disabled
             >
                 <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="11" cy="11" r="8"></circle>
                     <path d="m21 21-4.35-4.35"></path>
                 </svg>
-                Compare Selected
+                <span id="compare-btn-text">Compare Selected</span>
             </button>
 
             <a href="{{ url_for('clear') }}" 
@@ -347,10 +239,12 @@
                 New Batch Screening
             </a>
         </div>
+        {% endif %}
 
     </form>
 
     <!-- ================= LEGEND ================= -->
+    {% if ranked_results %}
     <div class="mt-10 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
         <h4 class="text-sm font-semibold text-white/70 mb-4 flex items-center gap-2">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -363,7 +257,7 @@
         <div class="flex flex-wrap gap-4 text-sm">
             <div class="flex items-center gap-2">
                 <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
-                <span class="text-white/60">65%+ = PASS (Low Risk)</span>
+                <span class="text-white/60">75%+ = PASS (Low Risk)</span>
             </div>
             <div class="flex items-center gap-2">
                 <span class="w-3 h-3 rounded-full bg-yellow-400"></span>
@@ -375,22 +269,112 @@
             </div>
         </div>
     </div>
+    {% endif %}
+
+    <!-- ================= QUICK STATS ================= -->
+    {% if ranked_results %}
+    <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+        {% set pass_count = ranked_results|selectattr('final', 'ge', 65)|list|length %}
+        {% set fail_count = ranked_results|length - pass_count %}
+        {% set avg_score = (ranked_results|map(attribute='final')|list|sum / ranked_results|length)|round(1) %}
+        
+        <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 text-center">
+            <span class="text-2xl font-bold text-white">{{ ranked_results|length }}</span>
+            <p class="text-white/50 text-xs mt-1">Total Candidates</p>
+        </div>
+        <div class="bg-emerald-500/10 backdrop-blur-xl border border-emerald-400/20 rounded-2xl p-4 text-center">
+            <span class="text-2xl font-bold text-emerald-400">{{ pass_count }}</span>
+            <p class="text-white/50 text-xs mt-1">Passed</p>
+        </div>
+        <div class="bg-red-500/10 backdrop-blur-xl border border-red-400/20 rounded-2xl p-4 text-center">
+            <span class="text-2xl font-bold text-red-400">{{ fail_count }}</span>
+            <p class="text-white/50 text-xs mt-1">Failed</p>
+        </div>
+        <div class="bg-blue-500/10 backdrop-blur-xl border border-blue-400/20 rounded-2xl p-4 text-center">
+            <span class="text-2xl font-bold text-blue-400">{{ avg_score }}%</span>
+            <p class="text-white/50 text-xs mt-1">Avg Score</p>
+        </div>
+    </div>
+    {% endif %}
 
 </div>
+{% endblock %}
 
-<!-- Three.js ES Module Setup -->
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.167.1/build/three.module.js"
-  }
-}
+{% block scripts %}
+<script>
+    // Compare Button Logic
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkboxes = document.querySelectorAll('.compare-checkbox');
+        const compareBtn = document.getElementById('compare-btn');
+        const compareBtnText = document.getElementById('compare-btn-text');
+        
+        if (!compareBtn || checkboxes.length === 0) return;
+
+        function updateCompareButton() {
+            const selected = [...checkboxes].filter(c => c.checked);
+            const checkedCount = selected.length;
+
+            // Max 2 selections
+            if (checkedCount > 2) {
+                // Uncheck the last one
+                event.target.checked = false;
+                showNotification('You can only compare 2 resumes at a time', 'info');
+                return;
+            }
+
+            // Enable only when exactly 2 selected
+            compareBtn.disabled = checkedCount !== 2;
+
+            // Update button text
+            if (checkedCount > 0) {
+                compareBtnText.textContent = `Compare Selected (${checkedCount})`;
+            } else {
+                compareBtnText.textContent = 'Compare Selected';
+            }
+
+            // Update button appearance
+            if (checkedCount === 2) {
+                compareBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                compareBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+        }
+        
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateCompareButton);
+        });
+
+        // Initial state
+        updateCompareButton();
+    });
+
+    // Notification function
+    function showNotification(message, type = 'info') {
+        const container = document.getElementById('notification-container');
+        if (!container) return;
+
+        const notification = document.createElement('div');
+        
+        let bgClass = 'bg-blue-500/20 border-blue-400/40 text-blue-300';
+        if (type === 'error') bgClass = 'bg-red-500/20 border-red-400/40 text-red-300';
+        if (type === 'success') bgClass = 'bg-emerald-500/20 border-emerald-400/40 text-emerald-300';
+
+        notification.className = `px-6 py-4 rounded-2xl backdrop-blur-xl border shadow-lg flex items-center gap-3 transform translate-x-full transition-transform duration-300 ${bgClass}`;
+        notification.innerHTML = `
+            <span>${message}</span>
+            <button class="ml-2 hover:opacity-70" onclick="this.parentElement.remove()">✕</button>
+        `;
+
+        container.appendChild(notification);
+        
+        requestAnimationFrame(() => {
+            notification.classList.remove('translate-x-full');
+        });
+
+        setTimeout(() => {
+            notification.classList.add('translate-x-full');
+            setTimeout(() => notification.remove(), 300);
+        }, 4000);
+    }
 </script>
-
-<!-- ES MODULES -->
-<script type="module" src="{{ url_for('static', filename='script.js') }}"></script>
-<script type="module" src="{{ url_for('static', filename='main.js') }}"></script>
-
-
-</body>
-</html>
+{% endblock %}
