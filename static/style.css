@@ -1,1363 +1,254 @@
-/* ======================================================
-   GLOBAL RESET & VARIABLES
-====================================================== */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+/* static/style.css - MINIMAL TAILWIND COMPANION */
 
-:root {
-    --glass-bg: rgba(255,255,255,0.08);
-    --glass-border: rgba(255,255,255,0.18);
-    --neon-blue: #00e6ff;
-    --neon-purple: #7b6cff;
-    --neon-green: #00ff88;
-    --text-primary: #f5f7ff;
-    --text-muted: rgba(255,255,255,0.65);
-}
-
-/* ======================================================
-   BODY & BACKGROUND
-====================================================== */
-body {
-    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-    min-height: 100vh;
-    background:
-        radial-gradient(circle at 20% 20%, #240046 0%, transparent 40%),
-        radial-gradient(circle at 80% 10%, #001d3d 0%, transparent 45%),
-        radial-gradient(circle at 50% 90%, #001219 0%, transparent 50%),
-        #05010a;
-    color: var(--text-primary);
-    overflow-x: hidden;
-    perspective: 1400px;
-}
-
-/* Auth page centering */
-body.auth-page {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-/* Push content below navbar */
-body:not(.auth-page) {
-    padding-top: 130px;
-}
-
-/* ======================================================
-   3D CANVAS BACKGROUND
-====================================================== */
+/* ===== 3D Canvas Background ===== */
 #three-canvas {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: -1;
+    z-index: 0;
     pointer-events: none;
 }
 
-/* ======================================================
-   GLASS BASE
-====================================================== */
-.glass-card {
-    background: linear-gradient(
-        180deg,
-        rgba(255,255,255,0.12),
-        rgba(255,255,255,0.04)
-    );
-    backdrop-filter: blur(22px) saturate(140%);
-    border: 1px solid var(--glass-border);
-    box-shadow:
-        0 40px 80px rgba(0,0,0,0.45),
-        inset 0 1px 0 rgba(255,255,255,0.25);
-    border-radius: 26px;
+/* ===== Body Background ===== */
+body {
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+    min-height: 100vh;
 }
 
-/* ======================================================
-   NAVBAR (FLOATING GLASS)
-====================================================== */
-.navbar {
-    position: fixed;
-    top: 24px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: min(1100px, calc(100% - 40px));
-    padding: 16px 28px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    z-index: 100;
+/* ===== Custom Keyframe Animations ===== */
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
 }
 
-.brand {
-    font-size: 1.25rem;
-    font-weight: 700;
-    background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+@keyframes fadeInUp {
+    0% { 
+        opacity: 0; 
+        transform: translateY(20px); 
+    }
+    100% { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
 }
 
-.nav-right {
-    display: flex;
-    align-items: center;
-    gap: 18px;
+@keyframes glow {
+    0% { box-shadow: 0 0 20px rgba(234, 179, 8, 0.3); }
+    100% { box-shadow: 0 0 40px rgba(234, 179, 8, 0.6); }
 }
 
-.user-info {
-    font-size: 0.95rem;
-    color: var(--text-muted);
+@keyframes ripple {
+    0% { transform: scale(0); opacity: 1; }
+    100% { transform: scale(4); opacity: 0; }
 }
 
-.badge {
-    margin-left: 6px;
-    padding: 4px 10px;
-    font-size: 0.7rem;
-    border-radius: 999px;
-    background: linear-gradient(135deg, #ff6b9d, #ffd23f);
-    color: #000;
-    font-weight: 700;
+@keyframes trophy-bounce {
+    0%, 100% { transform: rotate(-5deg) scale(1); }
+    50% { transform: rotate(5deg) scale(1.1); }
 }
 
-.badge.hr {
-    background: linear-gradient(135deg, var(--neon-green), var(--neon-blue));
+@keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 10px rgba(99, 102, 241, 0.3); }
+    50% { box-shadow: 0 0 25px rgba(99, 102, 241, 0.6); }
 }
 
-.logout-btn {
-    padding: 10px 18px;
-    border-radius: 999px;
-    background: rgba(255,255,255,0.14);
-    color: var(--text-primary);
-    text-decoration: none;
-    font-weight: 600;
-    transition: all 0.35s ease;
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
 }
 
-.logout-btn:hover {
-    background: rgba(255,255,255,0.25);
-    transform: translateY(-2px) scale(1.04);
+/* ===== Animation Classes ===== */
+.animate-float {
+    animation: float 6s ease-in-out infinite;
 }
 
-/* ======================================================
-   MAIN CONTAINER (3D FLOATING)
-====================================================== */
-.container {
-    max-width: 640px;
-    width: 92%;
-    margin: auto;
-    padding: clamp(36px, 5vw, 52px);
-    transform-style: preserve-3d;
-    animation: floatIn 0.9s cubic-bezier(.2,.8,.2,1);
+.animate-fade-in {
+    animation: fadeInUp 0.5s ease-out forwards;
 }
 
-/* ======================================================
-   AUTH CONTAINER
-====================================================== */
-.auth-container {
-    max-width: 420px;
-    width: 92%;
-    padding: 40px;
-    text-align: center;
-    animation: authPop 0.7s ease;
+.animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
 }
 
-/* ================= AUTH HEADER ================= */
-.auth-header {
-    text-align: center;
-    margin-bottom: 32px;
+.animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.trophy-icon {
+    animation: trophy-bounce 1.5s ease-in-out infinite;
+    display: inline-block;
+}
+
+/* ===== Staggered Animation for Cards ===== */
+.result-card {
+    animation: fadeInUp 0.5s ease-out forwards;
+    opacity: 0;
+}
+
+.result-card:nth-child(1) { animation-delay: 0.1s; }
+.result-card:nth-child(2) { animation-delay: 0.2s; }
+.result-card:nth-child(3) { animation-delay: 0.3s; }
+.result-card:nth-child(4) { animation-delay: 0.4s; }
+.result-card:nth-child(5) { animation-delay: 0.5s; }
+.result-card:nth-child(6) { animation-delay: 0.6s; }
+.result-card:nth-child(7) { animation-delay: 0.7s; }
+.result-card:nth-child(8) { animation-delay: 0.8s; }
+.result-card:nth-child(9) { animation-delay: 0.9s; }
+.result-card:nth-child(10) { animation-delay: 1.0s; }
+
+/* ===== Winner Card Glow Effect ===== */
+.winner-card {
     position: relative;
 }
 
-/* ICON CONTAINER */
-.auth-icon {
-    width: 64px;
-    height: 64px;
-    margin: 0 auto 12px;
-    border-radius: 18px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    background: linear-gradient(135deg, #00e6ff, #667eea);
-    box-shadow:
-        0 10px 30px rgba(0, 230, 255, 0.4),
-        inset 0 0 12px rgba(255, 255, 255, 0.3);
-
-    transform: perspective(600px) rotateX(10deg);
-}
-
-/* SVG ICON */
-.auth-icon svg {
-    width: 30px;
-    height: 30px;
-    color: #0b0318;
-}
-
-/* TITLE */
-.auth-title {
-    font-size: 2.4rem;
-    font-weight: 700;
-    margin-bottom: 6px;
-
-    background: linear-gradient(135deg, #00e6ff, #667eea);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-
-    text-shadow: 0 4px 20px rgba(0, 230, 255, 0.35);
-}
-
-/* SUBTITLE */
-.auth-subtitle {
-    font-size: 1rem;
-    opacity: 0.85;
-    color: #cfd6ff;
-}
-
-/* SUBTLE HOVER EFFECT */
-.auth-header:hover .auth-icon {
-    transform: perspective(600px) rotateX(0deg) translateY(-2px);
-    box-shadow:
-        0 15px 40px rgba(0, 230, 255, 0.6),
-        inset 0 0 16px rgba(255, 255, 255, 0.35);
-}
-
-
-/* ======================================================
-   HEADINGS
-====================================================== */
-h1 {
-    font-size: clamp(2.2rem, 5vw, 3.4rem);
-    text-align: center;
-    margin-bottom: 12px;
-    background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-p {
-    text-align: center;
-    color: var(--text-muted);
-    margin-bottom: 32px;
-}
-
-/* ======================================================
-   FORM ELEMENTS
-====================================================== */
-input, textarea, select, button {
-    width: 100%;
-    padding: 18px 20px;
-    margin-bottom: 18px;
-    border-radius: 18px;
-    font-size: 16px;
-    color: var(--text-primary);
-    background: rgba(255,255,255,0.12);
-    border: 1px solid rgba(255,255,255,0.15);
-    transition: all 0.35s ease;
-}
-
-select option {
-    background: #0b0318;
-}
-
-input:focus,
-textarea:focus,
-select:focus {
-    outline: none;
-    border-color: var(--neon-blue);
-    box-shadow:
-        0 0 0 3px rgba(0,230,255,0.35),
-        0 10px 30px rgba(0,230,255,0.25);
-}
-
-/* ======================================================
-   BUTTONS (NEON 3D)
-====================================================== */
-button {
-    border: none;
-    cursor: pointer;
-    font-weight: 700;
-    background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
-    box-shadow:
-        0 12px 40px rgba(0,230,255,0.35),
-        inset 0 1px 0 rgba(255,255,255,0.4);
-}
-
-button:hover {
-    transform: translateY(-3px) scale(1.02);
-    box-shadow:
-        0 20px 60px rgba(0,230,255,0.55);
-}
-
-/* ======================================================
-   RESULTS CARD
-====================================================== */
-.results {
-    margin-top: 42px;
-    padding: 40px;
-    display: flex;
-    flex-direction: column;
-    gap: 36px; /* controls vertical rhythm */
-}
-
-/* ======================================================
-   NEW: DECISION BADGE
-====================================================== */
-.decision-badge {
-    display: inline-block;
-    padding: 12px 28px;
-    border-radius: 999px;
-    font-size: 1rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    text-align: center;
-    margin-bottom: 20px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
-    animation: badgePulse 2s ease-in-out infinite;
-}
-
-.decision-badge.pass {
-    background: linear-gradient(135deg, var(--neon-green), #00d9ff);
-    color: #000;
-    box-shadow: 
-        0 8px 24px rgba(0,255,136,0.5),
-        0 0 40px rgba(0,255,136,0.3);
-}
-
-.decision-badge.fail {
-    background: linear-gradient(135deg, #ff3366, #ff6b9d);
-    color: #fff;
-    box-shadow: 
-        0 8px 24px rgba(255,51,102,0.5),
-        0 0 40px rgba(255,51,102,0.3);
-}
-
-/* ======================================================
-   NEW: METRIC CARDS
-====================================================== */
-.metric-card {
-    padding: 24px;
-    border-radius: 18px;
-    background: linear-gradient(
-        135deg,
-        rgba(255,255,255,0.12),
-        rgba(255,255,255,0.06)
-    );
-    border: 1px solid rgba(255,255,255,0.18);
-    box-shadow: 
-        0 10px 30px rgba(0,0,0,0.3),
-        inset 0 1px 0 rgba(255,255,255,0.2);
-    text-align: center;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.metric-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 
-        0 16px 40px rgba(0,0,0,0.4),
-        inset 0 1px 0 rgba(255,255,255,0.3);
-}
-
-
-/* ======================================================
-   DECISION BOX (EXISTING - PRESERVED)
-====================================================== */
-.decision-box {
-    padding: 28px;
-    border-radius: 20px;
-    text-align: center;
-    border: 2px solid;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.4);
-}
-
-.decision-box.pass {
-    background: linear-gradient(
-        135deg,
-        rgba(0,255,136,0.15),
-        rgba(0,230,255,0.15)
-    );
-    border-color: var(--neon-green);
-    box-shadow: 
-        0 12px 40px rgba(0,255,136,0.3),
-        inset 0 0 20px rgba(0,255,136,0.1);
-}
-
-.decision-box.fail {
-    background: linear-gradient(
-        135deg,
-        rgba(255,51,102,0.15),
-        rgba(255,107,157,0.15)
-    );
-    border-color: #ff3366;
-    box-shadow: 
-        0 12px 40px rgba(255,51,102,0.3),
-        inset 0 0 20px rgba(255,51,102,0.1);
-}
-
-.decision-box h2 {
-    font-size: 1.8rem;
-    margin-bottom: 12px;
-}
-
-.decision-box p {
-    font-size: 1.05rem;
-    line-height: 1.6;
-    margin-bottom: 16px;
-}
-
-.confidence {
-    display: inline-block;
-    padding: 8px 16px;
-    border-radius: 999px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    background: rgba(255,255,255,0.12);
-    color: var(--text-muted);
-}
-
-/* ======================================================
-   NEW: FAILURE REASONS BOX
-====================================================== */
-.failure-box {
-    padding: 24px;
-    border-radius: 18px;
-    background: linear-gradient(
-        135deg,
-        rgba(255,51,102,0.12),
-        rgba(255,107,157,0.08)
-    );
-    border: 1px solid rgba(255,51,102,0.3);
-    box-shadow: 
-        0 10px 30px rgba(255,51,102,0.2),
-        inset 0 1px 0 rgba(255,255,255,0.1);
-}
-
-.failure-box h3 {
-    font-size: 1.2rem;
-    font-weight: 700;
-    margin-bottom: 16px;
-    color: #ff6b9d;
-}
-
-.failure-box ul {
-    list-style: none;
-    padding: 0;
-}
-
-.failure-box li {
-    padding: 12px 16px;
-    margin-bottom: 10px;
-    border-radius: 12px;
-    background: rgba(255,255,255,0.08);
-    border-left: 4px solid #ff3366;
-    font-size: 0.95rem;
-    line-height: 1.6;
-    transition: transform 0.2s ease, background 0.2s ease;
-}
-
-.failure-box li:hover {
-    transform: translateX(6px);
-    background: rgba(255,255,255,0.12);
-}
-
-.failure-box li:last-child {
-    margin-bottom: 0;
-}
-
-/* ======================================================
-   NEW: AI EXPLANATION BOX
-====================================================== */
-.explain-box {
-    padding: 28px;
-    border-radius: 18px;
-    background: linear-gradient(
-        135deg,
-        rgba(123,108,255,0.12),
-        rgba(0,230,255,0.08)
-    );
-    border: 1px solid rgba(123,108,255,0.3);
-    box-shadow: 
-        0 10px 30px rgba(123,108,255,0.2),
-        inset 0 1px 0 rgba(255,255,255,0.1);
-}
-
-.explain-box h3 {
-    font-size: 1.2rem;
-    font-weight: 700;
-    margin-bottom: 20px;
-    background: linear-gradient(135deg, var(--neon-purple), var(--neon-blue));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.explain-box p {
-    margin-bottom: 16px;
-    line-height: 1.7;
-    font-size: 0.95rem;
-    text-align: left;
-}
-
-.explain-box p:last-child {
-    margin-bottom: 0;
-}
-
-.explain-box strong {
-    color: var(--neon-blue);
-    font-weight: 700;
-    display: inline-block;
-    margin-right: 6px;
-}
-
-/* ======================================================
-   SCORE HEADER (EXISTING - PRESERVED)
-====================================================== */
-
-.score-header h2 {
-    font-size: 1.3rem;
-    font-weight: 600;
-    color: var(--text-muted);
-}
-
-#final-score {
-    font-size: 3.6rem;
-    font-weight: 900;
-    line-height: 1;
-    background: linear-gradient(135deg, var(--neon-green), var(--neon-blue));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-/* ================= SCORE BOXES ================= */
-
-.score-box span:last-child {
-    font-size: 1.4rem;
-    font-weight: 700;
-}
-
-
-/* ======================================================
-   SKILLS & CHART
-====================================================== */
-.chart-container {
-    margin-top: 10px;
-    padding: 18px;
-    background: rgba(0,0,0,0.35);
-    height: 320px;
-    margin: 26px 0;
-    border-radius: 20px;
-    overflow: hidden;
-}
-
-.skill-list{
-    margin-top: 10px;
-}
-
-.skills-list h3 {
-    margin-bottom: 14px;
-}
-
-.skills-list ul {
-    list-style: none;
-    display: flex;
-    flex-wrap: wrap;       /* allow wrapping to next line */
-    gap: 12px;             /* spacing between badges */
-    padding: 0;
-    margin: 0;
-}
-
-.skills-list li {
-    padding: 8px 16px;     /* make badges a bit smaller for tighter fit */
-    font-size: 0.9rem;
-    border-radius: 999px;
-    background: linear-gradient(135deg, #00e6ff, #667eea);
-    color: #fff;
-    font-weight: 600;
-    display: inline-flex;  /* better alignment for text inside badges */
-    align-items: center;
-    justify-content: center;
-    white-space: nowrap;   /* prevent text from breaking inside badge */
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
-
-.skills-list li:hover {
-    transform: translateY(-2px) scale(1.05);
-    box-shadow: 0 6px 16px rgba(0,0,0,0.35);
-}
-
-
-/* ======================================================
-   GAP BOX (EXISTING - PRESERVED)
-====================================================== */
-.gap-box {
-    padding: 24px;
-    border-radius: 18px;
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.12);
-}
-
-.gap-box h3 {
-    font-size: 1.1rem;
-    margin-bottom: 14px;
-    color: var(--text-muted);
-}
-
-.gap-box ul {
-    list-style: none;
-    padding: 0;
-}
-
-.gap-box li {
-    padding: 10px 16px;
-    margin-bottom: 8px;
-    border-radius: 12px;
-    background: rgba(255,255,255,0.06);
-    font-size: 0.9rem;
-}
-
-/* ======================================================
-   RECOMMENDATIONS (EXISTING - PRESERVED)
-====================================================== */
-.recommendations {
-    padding: 24px;
-    border-radius: 18px;
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.12);
-}
-
-.recommendations h3 {
-    font-size: 1.1rem;
-    margin-bottom: 14px;
-    color: var(--text-muted);
-}
-
-.recommendations ul {
-    list-style: none;
-    padding: 0;
-}
-
-.recommendations li {
-    padding: 12px 16px;
-    margin-bottom: 10px;
-    border-radius: 12px;
-    background: rgba(255,255,255,0.06);
-    font-size: 0.95rem;
-    line-height: 1.6;
-    border-left: 3px solid var(--neon-blue);
-}
-
-/* ======================================================
-   HEATMAP WORDS
-====================================================== */
-.heatmap {
-    margin-top: 10px;
-    padding: 26px 28px;
-}
-
-.heatmap h3 {
-    margin-bottom: 16px;
-    font-size: 1.1rem;
-}
-
-.heatmap-words {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    line-height: 1.8;
-}
-
-.heat-word {
-    padding: 8px 16px;
-    border-radius: 999px;
-    font-size: 0.85rem;
-    box-shadow: 0 6px 16px rgba(0,0,0,0.25);
-    font-weight: 700;
-    background: linear-gradient(135deg, #ff6b9d, #ffd23f);
-    color: #000;
-    transition: transform 0.25s ease;
-}
-
-.heat-word:hover {
-    transform: scale(1.12) rotate(-1deg);
-}
-
-/* ======================================================
-   PREVIEW
-====================================================== */
-.preview {
-    margin-top: 40px;
-    padding: 22px 24px;
-    border-radius: 16px;
-    background: rgba(0,0,0,0.45);
-    max-height: 180px;
-    overflow-y: auto;
-}
-
-.preview h3 {
-    margin-bottom: 10px;
-}
-
-.preview p {
-    line-height: 1.8;
-    font-size: 0.95rem;
-}
-
-/* ======================================================
-   ACTION BUTTONS
-====================================================== */
-.download-btn,
-.clear-btn {
-    padding: 14px 28px;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 16px;
-    transition: transform 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease;
-    perspective: 1000px; /* depth for 3D effect */
-    position: relative;
-    margin: 10px 10px 10px 0; /* spacing between buttons */
-    display: inline-block; /* ensures proper spacing */
-    background: linear-gradient(135deg, #00aaff, #0066cc); /* blue gradient */
-    color: #fff;
-    box-shadow: 0 6px 12px rgba(0, 170, 255, 0.4), 0 0 10px rgba(0, 170, 255, 0.6);
-}
-
-/* Ultra 3D Hover Effect */
-.download-btn:hover,
-.clear-btn:hover {
-    transform: translateY(-8px) rotateX(8deg) rotateY(8deg);
-    box-shadow: 0 16px 24px rgba(0, 0, 0, 0.3), 
-                0 0 20px rgba(0, 170, 255, 0.8),
-                0 0 40px rgba(0, 170, 255, 0.4);
-    filter: brightness(1.2) saturate(1.3);
-    animation: neonPulse 1.5s infinite alternate;
-}
-
-/* Press Effect */
-.download-btn:active,
-.clear-btn:active {
-    transform: translateY(-3px) rotateX(2deg) rotateY(2deg);
-    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
-    filter: brightness(1);
-}
-
-.actions {
-    margin-top: 30px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;   
-    gap: 18px;
-}
-
-/* Download button stays centered */
-.actions .download-btn {
-    min-width: 260px;
-    text-align: center;
-}
-
-/* New Analysis button spans wider (visual hierarchy) */
-/* New Analysis button spans wider (visual hierarchy) */
-.actions .clear-btn {
-    width: 100%;
-    max-width: 420px;
-    margin: 0 auto;        /* centers the button horizontally */
-    display: block;        /* ensures margin auto works */
-    text-align: center;    /* centers text inside */
-}
-
-
-/* ======================================================
-   FEEDBACK
-====================================================== */
-.spinner {
-    text-align: center;
-    font-size: 1.2rem;
-    color: var(--neon-blue);
-    padding: 32px;
-}
-
-.error {
-    background: rgba(255,0,0,0.25);
-    padding: 16px;
-    border-radius: 14px;
-    text-align: center;
-}
-
-/* ======================================================
-   FORM LAYOUT FIX (SPACING & RHYTHM)
-====================================================== */
-.form-card {
-    padding: 36px;
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;              /* space between label & field */
-    margin-bottom: 28px;   /* space between sections */
-}
-
-/* Remove double spacing from inputs */
-.form-group input,
-.form-group textarea,
-.form-group select {
-    margin-bottom: 0;
-}
-
-/* ======================================================
-   SVG ICONS (FOR INDEX.HTML HEADERS)
-====================================================== */
-.field-label {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--text-muted);
-    margin-bottom: 6px;
-}
-
-/* SVG icon base */
-.field-label .icon {
-    width: 18px;
-    height: 18px;
-    flex-shrink: 0;
-    stroke: var(--neon-blue);
-    fill: none;
-    stroke-width: 1.8;
-    opacity: 0.9;
-}
-
-/* Glow on focus */
-.form-group:focus-within .field-label .icon {
-    stroke: var(--neon-green);
-    filter: drop-shadow(0 0 6px rgba(0, 255, 136, 0.6));
-}
-
-/* ======================================================
-   PAGE HEADER SPACING
-====================================================== */
-.page-header {
-    margin-bottom: 46px;
-}
-
-.page-header h1 {
-    margin-bottom: 10px;
-}
-
-.page-header p {
-    margin-bottom: 0;
-}
-
-/* ======================================================
-   ANIMATIONS
-====================================================== */
-@keyframes floatIn {
-    from { opacity: 0; transform: translateY(40px) rotateX(8deg); }
-    to { opacity: 1; transform: translateY(0) rotateX(0); }
-}
-
-@keyframes rise {
-    from { opacity: 0; transform: translateY(25px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes authPop {
-    from { opacity: 0; transform: scale(0.92); }
-    to { opacity: 1; transform: scale(1); }
-}
-
-@keyframes neonPulse {
-    0%, 100% {
-        box-shadow: 0 6px 12px rgba(0, 170, 255, 0.4), 0 0 10px rgba(0, 170, 255, 0.6);
-    }
-    50% {
-        box-shadow: 0 10px 20px rgba(0, 170, 255, 0.6), 0 0 30px rgba(0, 170, 255, 1);
-    }
-}
-
-@keyframes badgePulse {
-    0%, 100% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.05);
-    }
-}
-
-/* ======================================================
-   LANDSCAPE RESULTS LAYOUT (3-COLUMN)
-====================================================== */
-.result-landscape {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-    padding: 32px;
-    margin-bottom: 32px;
-}
-
-.result-col {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-/* ======================================================
-   LEFT COLUMN: STATUS
-====================================================== */
-.status-col {
-    min-height: 280px;
-}
-
-.status-pill {
-    padding: 10px 24px;
-    border-radius: 999px;
-    font-weight: 800;
-    text-align: center;
-    font-size: 0.95rem;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.35);
-    animation: badgePulse 2s ease-in-out infinite;
-}
-
-.status-pill.pass {
-    background: linear-gradient(135deg, var(--neon-green), #00d9ff);
-    color: #000;
-    box-shadow: 
-        0 8px 24px rgba(0,255,136,0.5),
-        0 0 40px rgba(0,255,136,0.3);
-}
-
-.status-pill.fail {
-    background: linear-gradient(135deg, #ff3366, #ff6b9d);
-    color: #fff;
-    box-shadow: 
-        0 8px 24px rgba(255,51,102,0.5),
-        0 0 40px rgba(255,51,102,0.3);
-}
-
-.status-card {
-    background: rgba(255, 255, 255, 0.05);
-    padding: 24px;
-    border-radius: 18px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 
-        0 10px 30px rgba(0,0,0,0.3),
-        inset 0 1px 0 rgba(255,255,255,0.15);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.status-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 
-        0 16px 40px rgba(0,0,0,0.4),
-        inset 0 1px 0 rgba(255,255,255,0.25);
-}
-
-.status-title {
-    font-size: 1.4rem;
-    font-weight: 700;
-    margin-bottom: 12px;
-    line-height: 1.3;
-}
-
-.status-text {
-    color: var(--text-muted);
-    margin-bottom: 16px;
-    line-height: 1.6;
-    font-size: 0.95rem;
-    text-align: left;
-    flex: 1;
-}
-
-.confidence-chip {
-    display: inline-block;
-    background: linear-gradient(
-        135deg,
-        rgba(99, 102, 241, 0.25),
-        rgba(139, 92, 246, 0.25)
-    );
-    color: #a78bfa;
-    padding: 8px 16px;
-    border-radius: 999px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    border: 1px solid rgba(167, 139, 250, 0.3);
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-    align-self: flex-start;
-}
-
-/* ======================================================
-   CENTER COLUMN: METRICS
-====================================================== */
-.metrics-col {
-    gap: 16px;
-}
-
-.metrics-col .metric-card {
-    background: rgba(255, 255, 255, 0.05);
-    padding: 24px;
-    border-radius: 18px;
-    text-align: center;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    box-shadow: 
-        0 10px 30px rgba(0,0,0,0.3),
-        inset 0 1px 0 rgba(255,255,255,0.15);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 12px;
-}
-
-.metrics-col .metric-card:hover {
-    transform: translateY(-4px) scale(1.02);
-    box-shadow: 
-        0 16px 40px rgba(0,0,0,0.4),
-        inset 0 1px 0 rgba(255,255,255,0.25);
-}
-
-.metric-label {
-    display: block;
-    font-size: 0.9rem;
-    color: var(--text-muted);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.metric-value {
-    display: block;
-    font-size: 2.8rem;
-    font-weight: 900;
-    line-height: 1;
-}
-
-.metric-value.blue {
-    background: linear-gradient(135deg, #60a5fa, #3b82f6);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 0 12px rgba(96, 165, 250, 0.4));
-}
-
-.metric-value.danger {
-    background: linear-gradient(135deg, #ef4444, #dc2626);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 0 12px rgba(239, 68, 68, 0.4));
-}
-
-.metric-value.warning {
-    background: linear-gradient(135deg, #f59e0b, #d97706);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.4));
-}
-
-.metric-value.success {
-    background: linear-gradient(135deg, #22c55e, #16a34a);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 0 12px rgba(34, 197, 94, 0.4));
-}
-
-/* ======================================================
-   RIGHT COLUMN: SCORES
-====================================================== */
-.score-col {
-    gap: 16px;
-}
-
-.final-score {
-    background: linear-gradient(
-        135deg,
-        rgba(99, 102, 241, 0.2),
-        rgba(139, 92, 246, 0.2)
-    );
-    padding: 24px;
-    border-radius: 18px;
-    text-align: center;
-    border: 1px solid rgba(139, 92, 246, 0.3);
-    box-shadow: 
-        0 12px 32px rgba(99, 102, 241, 0.3),
-        inset 0 1px 0 rgba(255,255,255,0.2);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.final-score:hover {
-    transform: translateY(-4px);
-    box-shadow: 
-        0 20px 48px rgba(99, 102, 241, 0.45),
-        inset 0 1px 0 rgba(255,255,255,0.3);
-}
-
-.final-score span {
-    display: block;
-    font-size: 0.9rem;
-    color: var(--text-muted);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 8px;
-}
-
-.final-score h2 {
-    font-size: 3.2rem;
-    margin: 0;
-    font-weight: 900;
-    line-height: 1;
-    background: linear-gradient(135deg, #818cf8, #a78bfa);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 0 16px rgba(129, 140, 248, 0.5));
-}
-
-/* Mini Score Cards */
-.mini-scores {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-}
-
-.mini-card {
-    background: rgba(255, 255, 255, 0.05);
-    padding: 16px;
-    border-radius: 14px;
-    text-align: center;
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 
-        0 6px 16px rgba(0,0,0,0.25),
-        inset 0 1px 0 rgba(255,255,255,0.1);
-    transition: all 0.3s ease;
-    line-height: 1.4;
-}
-
-.mini-card:hover {
-    transform: translateY(-2px);
-    background: rgba(255, 255, 255, 0.08);
-    box-shadow: 
-        0 10px 24px rgba(0,0,0,0.35),
-        inset 0 1px 0 rgba(255,255,255,0.15);
-}
-
-.mini-card strong {
-    color: #fff;
-    font-size: 1.3rem;
-    font-weight: 800;
-    display: block;
-    margin-top: 6px;
-    background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-/* ======================================================
-   🔧 ALIGNMENT FIX OVERRIDES (NON-DESTRUCTIVE)
-   Appended safely – no existing code removed
-====================================================== */
-
-/* Allow container to expand for results */
-.container {
-    max-width: 1400px;
-    width: 100%;
-}
-
-/* Center results section in viewport */
-.results {
-    align-items: center;
-}
-
-/* Force landscape layout to be centered and full-width */
-.result-landscape {
-    max-width: 1200px;
-    width: 100%;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-/* Ensure each column stretches evenly */
-.result-col {
-    height: 100%;
-}
-
-/* Prevent cards from shrinking weirdly */
-.status-col,
-.metrics-col,
-.score-col {
-    width: 100%;
-}
-
-/* Fix preview & lower sections drifting left */
-.preview,
-.failure-box,
-.explain-box,
-.skills-list,
-.gap-box,
-.recommendations,
-.heatmap {
-    max-width: 1200px;
-    width: 100%;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-/* Center action buttons block */
-.actions {
-    width: 100%;
-    max-width: 1200px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.mode-switch {
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
-}
-
-.mode-btn {
-    padding: 0.6rem 1.2rem;
-    border-radius: 20px;
-    border: none;
-    cursor: pointer;
-    background: rgba(255,255,255,0.15);
-    color: #fff;
-}
-
-.mode-btn.active {
-    background: #4f9cff;
-    color: #000;
-}
-.pagination {
-    display: flex;
-    justify-content: center;
-    gap: 0.5rem;
-    margin: 2rem auto;
-    padding: 1rem;
-}
-
-.page-btn {
-    padding: 0.5rem 0.9rem;
+.winner-card::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(135deg, #f59e0b, #eab308, #fbbf24);
+    border-radius: 1.75rem;
+    z-index: -1;
+    opacity: 0.5;
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+/* ===== Custom Checkbox Styling ===== */
+.compare-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 24px;
+    height: 24px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
     border-radius: 8px;
-    text-decoration: none;
-    color: #fff;
-    background: rgba(255,255,255,0.12);
-    transition: 0.2s ease;
+    background: rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
 }
 
-.page-btn:hover {
-    background: rgba(255,255,255,0.25);
+.compare-checkbox:hover {
+    border-color: rgba(99, 102, 241, 0.6);
+    background: rgba(99, 102, 241, 0.2);
 }
 
-.page-btn.active {
-    background: linear-gradient(135deg, #00e6ff, #667eea);
+.compare-checkbox:checked {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-color: #6366f1;
+}
+
+.compare-checkbox:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 14px;
     font-weight: bold;
 }
-.winner-badge {
-  position: absolute;
-  top: -10px;
-  right: -10px;
-  background: gold;
-  color: #000;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-weight: 700;
+
+/* ===== Custom Scrollbar ===== */
+::-webkit-scrollbar {
+    width: 8px;
 }
 
-/* ======================================================
-   RESPONSIVE DESIGN
-====================================================== */
-@media (max-width: 1200px) {
-    .result-landscape {
-        grid-template-columns: 1fr;
-        gap: 20px;
-        padding: 24px;
-    }
-    
-    .result-col {
-        min-height: auto;
-    }
-    
-    .status-col {
-        min-height: auto;
-    }
-    
-    .mini-scores {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .metric-value {
-        font-size: 2.4rem;
-    }
-    
-    .final-score h2 {
-        font-size: 2.8rem;
-    }
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
 }
 
-@media (max-width: 768px) {
-    .result-landscape {
-        padding: 20px;
-        gap: 16px;
-    }
-    
-    .status-pill {
-        font-size: 0.85rem;
-        padding: 8px 20px;
-    }
-    
-    .status-title {
-        font-size: 1.2rem;
-    }
-    
-    .status-text {
-        font-size: 0.9rem;
-    }
-    
-    .metric-value {
-        font-size: 2rem;
-    }
-    
-    .final-score h2 {
-        font-size: 2.4rem;
-    }
-    
-    .mini-card {
-        padding: 12px;
-        font-size: 0.8rem;
-    }
-    
-    .mini-card strong {
-        font-size: 1.1rem;
-    }
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
 }
 
-@media (max-width: 480px) {
-    .result-landscape {
-        padding: 16px;
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+/* ===== File Input Styling ===== */
+input[type="file"]::file-selector-button {
+    background: rgba(99, 102, 241, 0.3);
+    border: 1px solid rgba(99, 102, 241, 0.5);
+    padding: 0.5rem 1rem;
+    border-radius: 0.75rem;
+    color: white;
+    cursor: pointer;
+    margin-right: 1rem;
+    transition: all 0.2s;
+}
+
+input[type="file"]::file-selector-button:hover {
+    background: rgba(99, 102, 241, 0.5);
+}
+
+/* ===== Select Dropdown Arrow ===== */
+select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='rgba(255,255,255,0.5)'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1.5rem;
+}
+
+/* ===== Focus Styles ===== */
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+}
+
+/* ===== Glass Card Hover Effect ===== */
+.glass-hover {
+    transition: all 0.3s ease;
+}
+
+.glass-hover:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+/* ===== Button Press Effect ===== */
+.btn-press {
+    transition: transform 0.1s ease;
+}
+
+.btn-press:active {
+    transform: scale(0.98);
+}
+
+/* ===== Print Styles ===== */
+@media print {
+    #three-canvas,
+    nav,
+    .mode-btn,
+    button,
+    a[href],
+    #notification-container,
+    .compare-checkbox {
+        display: none !important;
     }
-    
-    .status-card,
-    .metrics-col .metric-card,
-    .final-score {
-        padding: 18px;
+
+    body {
+        background: white !important;
+        color: black !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
     }
-    
-    .metric-value {
-        font-size: 1.8rem;
+
+    .bg-white\/10,
+    .bg-white\/5,
+    [class*="backdrop-blur"] {
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        backdrop-filter: none !important;
     }
-    
-    .final-score h2 {
-        font-size: 2rem;
+
+    .text-white,
+    .text-white\/70,
+    .text-white\/60 {
+        color: #1e293b !important;
     }
 }
