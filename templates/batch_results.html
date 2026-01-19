@@ -5,39 +5,195 @@
     <title>Batch Screening Results</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Styles -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'fade-in': 'fadeIn 0.5s ease-out forwards',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+            min-height: 100vh;
+        }
+        
+        #three-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Custom checkbox styling */
+        .compare-checkbox {
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .compare-checkbox:hover {
+            border-color: rgba(99, 102, 241, 0.6);
+            background: rgba(99, 102, 241, 0.2);
+        }
+        .compare-checkbox:checked {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-color: #6366f1;
+        }
+        .compare-checkbox:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* Staggered animation for cards */
+        .result-card {
+            animation: fadeIn 0.5s ease-out forwards;
+            opacity: 0;
+        }
+        .result-card:nth-child(1) { animation-delay: 0.1s; }
+        .result-card:nth-child(2) { animation-delay: 0.2s; }
+        .result-card:nth-child(3) { animation-delay: 0.3s; }
+        .result-card:nth-child(4) { animation-delay: 0.4s; }
+        .result-card:nth-child(5) { animation-delay: 0.5s; }
+        .result-card:nth-child(6) { animation-delay: 0.6s; }
+        .result-card:nth-child(7) { animation-delay: 0.7s; }
+        .result-card:nth-child(8) { animation-delay: 0.8s; }
+        .result-card:nth-child(9) { animation-delay: 0.9s; }
+        .result-card:nth-child(10) { animation-delay: 1.0s; }
+    </style>
 </head>
 
-<body>
+<body class="text-white min-h-screen">
+
+<!-- 3D Background -->
+<canvas id="three-canvas"></canvas>
 
 <!-- ================= NAVBAR ================= -->
-<nav class="navbar glass-card">
-    <span class="brand">AI Resume Screener</span>
+<nav class="
+    fixed top-6 left-1/2 -translate-x-1/2
+    w-[min(1100px,calc(100%-32px))]
+    flex items-center justify-between
+    px-8 py-4
+    rounded-3xl
+    bg-white/10
+    backdrop-blur-xl
+    border border-white/20
+    text-white
+    z-50
+    shadow-lg shadow-black/20
+">
+    <span class="text-lg font-bold tracking-wide flex items-center gap-2">
+        <svg class="w-6 h-6 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+        </svg>
+        AI Resume Screener
+    </span>
 
-    <div class="nav-right">
-        <span class="user-info">
+    <div class="flex items-center gap-6">
+        <span class="flex items-center gap-2 text-sm">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+            </svg>
             {{ session.user }}
+
             {% if session.role == "admin" %}
-                <span class="badge">ADMIN</span>
+                <span class="px-2 py-0.5 text-xs rounded-full bg-red-500/20 border border-red-400/40 text-red-300">
+                    ADMIN
+                </span>
             {% else %}
-                <span class="badge hr">HR</span>
+                <span class="px-2 py-0.5 text-xs rounded-full bg-blue-500/20 border border-blue-400/40 text-blue-300">
+                    HR
+                </span>
             {% endif %}
         </span>
-        <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+
+        <a href="{{ url_for('logout') }}"
+           class="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 transition duration-200 text-sm">
+            Logout
+        </a>
     </div>
 </nav>
 
-<div class="container">
+<div class="relative z-10 max-w-6xl mx-auto pt-32 px-6 pb-12">
 
     <!-- ================= HEADER ================= -->
-    <header class="page-header">
-        <h1>📊 Batch Screening Results</h1>
-        <p>Ranked candidates based on AI evaluation</p>
+    <header class="text-center mb-10">
+        <div class="inline-flex items-center justify-center w-16 h-16 mb-4 bg-gradient-to-br from-purple-500/30 to-pink-500/30 rounded-2xl border border-white/20 shadow-lg shadow-purple-500/20">
+            <svg class="w-8 h-8 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="20" x2="18" y2="10"></line>
+                <line x1="12" y1="20" x2="12" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+        </div>
+        <h1 class="text-3xl font-extrabold mb-2 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+            📊 Batch Screening Results
+        </h1>
+        <p class="text-white/70">
+            Ranked candidates based on AI evaluation
+        </p>
     </header>
 
     {% if error %}
-        <div class="error glass-card">{{ error }}</div>
+        <div class="mb-6 px-6 py-4 bg-red-500/20 border border-red-400/40 rounded-2xl text-red-300 text-center flex items-center justify-center gap-3 backdrop-blur-xl">
+            <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="15" y1="9" x2="9" y2="15"></line>
+                <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+            {{ error }}
+        </div>
     {% endif %}
 
     <!-- ================= COMPARE FORM ================= -->
@@ -47,108 +203,194 @@
         <input type="hidden" name="source" value="batch">
 
         {% if ranked_results %}
+            <div class="space-y-4">
             {% for r in ranked_results %}
-            <section class="results glass-card result-landscape">
+            <section class="result-card bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-lg shadow-black/10 hover:bg-white/[0.12] transition duration-300">
 
-                <!-- CHECKBOX -->
-                <div class="compare-select">
-                    <input
-                        type="checkbox"
-                        class="compare-checkbox"
-                        name="compare_ids"
-                        value="{{ loop.index0 }}"
-                    >
-                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-[auto_1fr_1fr_1fr] gap-6 items-center">
 
-                <!-- LEFT -->
-                <div class="result-col status-col">
-                    {% set status = "PASS" if r.final >= 65 else "FAIL" %}
-                    <div class="status-pill {{ 'pass' if status == 'PASS' else 'fail' }}">
-                        {{ status }}
+                    <!-- CHECKBOX -->
+                    <div class="flex items-center justify-center lg:justify-start">
+                        <label class="flex items-center gap-3 cursor-pointer group">
+                            <input
+                                type="checkbox"
+                                class="compare-checkbox"
+                                name="compare_ids"
+                                value="{{ loop.index0 }}"
+                            >
+                            <span class="text-xs text-white/50 group-hover:text-white/70 transition hidden lg:inline">
+                                Compare
+                            </span>
+                        </label>
                     </div>
 
-                    <div class="status-card">
-                        <h3>#{{ loop.index }} {{ r.filename }}</h3>
-                        <span class="confidence-chip">
-                            ATS Confidence: {{ r.final }}%
-                        </span>
-                    </div>
-                </div>
-
-                <!-- CENTER -->
-                <div class="result-col metrics-col">
-                    <div class="metric-card">
-                        <span class="metric-label">JD Coverage</span>
-                        <span class="metric-value blue">{{ r.coverage }}%</span>
-                    </div>
-
-                    <div class="metric-card">
-                        <span class="metric-label">Hiring Risk</span>
-                        <span class="metric-value
-                            {% if r.final < 60 %}danger
-                            {% elif r.final < 75 %}warning
-                            {% else %}success{% endif %}">
-                            {% if r.final < 60 %}HIGH
-                            {% elif r.final < 75 %}MEDIUM
-                            {% else %}LOW{% endif %}
-                        </span>
-                    </div>
-                </div>
-
-                <!-- RIGHT -->
-                <div class="result-col score-col">
-                    <div class="final-score">
-                        <span>Final Score</span>
-                        <h2>{{ r.final }}%</h2>
-                    </div>
-
-                    <div class="mini-scores">
-                        <div class="mini-card">
-                            Quality<br><strong>{{ r.quality }}%</strong>
+                    <!-- LEFT: Status -->
+                    <div class="flex flex-col items-center lg:items-start text-center lg:text-left">
+                        {% set status = "PASS" if r.final >= 65 else "FAIL" %}
+                        <div class="px-6 py-2 rounded-full text-sm font-bold mb-3
+                            {% if status == 'PASS' %}
+                                bg-emerald-500/20 border-2 border-emerald-400 text-emerald-400
+                            {% else %}
+                                bg-red-500/20 border-2 border-red-400 text-red-400
+                            {% endif %}">
+                            {{ status }}
                         </div>
-                        <div class="mini-card">
-                            Job Match<br><strong>{{ r.match }}%</strong>
+
+                        <div class="bg-white/5 rounded-xl p-4 w-full">
+                            <h3 class="font-semibold mb-2 flex items-center gap-2 justify-center lg:justify-start">
+                                <span class="w-8 h-8 flex items-center justify-center rounded-full bg-gradient-to-br from-purple-500/30 to-pink-500/30 text-sm font-bold">
+                                    {{ loop.index }}
+                                </span>
+                                <span class="truncate max-w-[150px]" title="{{ r.filename }}">
+                                    {{ r.filename }}
+                                </span>
+                            </h3>
+                            <span class="inline-block px-3 py-1 rounded-full text-xs bg-blue-500/20 border border-blue-400/40 text-blue-300">
+                                ATS Confidence: {{ r.final }}%
+                            </span>
                         </div>
                     </div>
+
+                    <!-- CENTER: Metrics -->
+                    <div class="flex flex-row lg:flex-col gap-3">
+                        <div class="bg-white/5 rounded-xl p-4 text-center flex-1">
+                            <span class="text-xs text-white/60 block mb-1">JD Coverage</span>
+                            <span class="text-2xl font-bold text-blue-400">{{ r.coverage }}%</span>
+                        </div>
+
+                        <div class="bg-white/5 rounded-xl p-4 text-center flex-1">
+                            <span class="text-xs text-white/60 block mb-1">Hiring Risk</span>
+                            <span class="text-2xl font-bold
+                                {% if r.final < 60 %}text-red-400
+                                {% elif r.final < 75 %}text-yellow-400
+                                {% else %}text-emerald-400{% endif %}">
+                                {% if r.final < 60 %}HIGH
+                                {% elif r.final < 75 %}MEDIUM
+                                {% else %}LOW{% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT: Scores -->
+                    <div class="flex flex-col items-center">
+                        <div class="bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-2xl p-5 w-full text-center mb-3 border border-white/10">
+                            <span class="text-xs text-white/60 block mb-1">Final Score</span>
+                            <h2 class="text-3xl font-extrabold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                                {{ r.final }}%
+                            </h2>
+                        </div>
+
+                        <div class="flex gap-2 w-full">
+                            <div class="bg-white/5 rounded-lg p-2 flex-1 text-center">
+                                <span class="text-[10px] text-white/60 block">Quality</span>
+                                <strong class="text-sm">{{ r.quality }}%</strong>
+                            </div>
+                            <div class="bg-white/5 rounded-lg p-2 flex-1 text-center">
+                                <span class="text-[10px] text-white/60 block">Match</span>
+                                <strong class="text-sm">{{ r.match }}%</strong>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
             </section>
             {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-16 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl">
+                <svg class="w-16 h-16 mx-auto mb-4 text-white/30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                    <polyline points="13 2 13 9 20 9"></polyline>
+                </svg>
+                <p class="text-white/50 text-lg">No results to display</p>
+                <p class="text-white/30 text-sm mt-2">Upload resumes to start batch screening</p>
+            </div>
         {% endif %}
 
         <!-- ================= ACTIONS ================= -->
-        <div class="actions" style="text-align:center; margin-top:2rem;">
+        <div class="flex flex-wrap justify-center gap-4 mt-10">
 
             <button
                 type="button"
                 id="export-batch-pdf"
-                class="primary-btn"
-                style="margin-right:1rem;"
+                class="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-2xl text-white font-semibold hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-lg shadow-blue-500/25 flex items-center gap-2"
             >
-                📄 Export Batch Results PDF
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                </svg>
+                Export Batch Results PDF
             </button>
 
             <button
                 type="submit"
                 id="compare-btn"
-                class="compare-btn"
+                class="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 rounded-2xl text-white font-semibold hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-lg shadow-purple-500/25 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 disabled
             >
-                🔍 Compare Selected
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+                Compare Selected
             </button>
 
-            <a href="{{ url_for('clear') }}" class="clear-btn">
+            <a href="{{ url_for('clear') }}" 
+               class="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl text-white font-semibold transition duration-200 flex items-center gap-2">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="1 4 1 10 7 10"></polyline>
+                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                </svg>
                 New Batch Screening
             </a>
         </div>
 
-
     </form>
+
+    <!-- ================= LEGEND ================= -->
+    <div class="mt-10 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+        <h4 class="text-sm font-semibold text-white/70 mb-4 flex items-center gap-2">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+            Score Legend
+        </h4>
+        <div class="flex flex-wrap gap-4 text-sm">
+            <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
+                <span class="text-white/60">65%+ = PASS (Low Risk)</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-yellow-400"></span>
+                <span class="text-white/60">60-74% = PASS (Medium Risk)</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-red-400"></span>
+                <span class="text-white/60">&lt;65% = FAIL (High Risk)</span>
+            </div>
+        </div>
+    </div>
 
 </div>
 
+<!-- Three.js ES Module Setup -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.167.1/build/three.module.js"
+  }
+}
+</script>
+
 <!-- ES MODULES -->
+<script type="module" src="{{ url_for('static', filename='script.js') }}"></script>
 <script type="module" src="{{ url_for('static', filename='main.js') }}"></script>
+
 
 </body>
 </html>
