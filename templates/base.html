@@ -114,17 +114,10 @@
 <!-- Notification Container -->
 <div id="notification-container" class="fixed top-24 right-6 z-[100] flex flex-col gap-3"></div>
 
-<!-- Three.js Import Map -->
-<script type="importmap">
-{
-    "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.167.1/build/three.module.js"
-    }
-}
-</script>
+
 
 <!-- Main Scripts -->
-<script type="module" src="{{ url_for('static', filename='script.js') }}"></script>
+<script src="{{ url_for('static', filename='script.js') }}"></script>
 <script type="module" src="{{ url_for('static', filename='main.js') }}"></script>
 
 {% block scripts %}{% endblock %}
