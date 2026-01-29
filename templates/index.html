@@ -27,6 +27,9 @@
         </p>
     </header>
 
+    <!-- ================= SHOW FORMS ONLY WHEN NO RESULTS ================= -->
+    {% if not success %}
+
     <!-- ================= MODE SELECTOR ================= -->
     <div class="mb-6 text-center bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-lg shadow-black/10">
         <h3 class="text-lg font-semibold mb-4">Choose Screening Mode</h3>
@@ -44,7 +47,6 @@
         </div>
     </div>
 
-    {% if not success %}
     <!-- ================= SINGLE RESUME FORM ================= -->
     <div class="mode-section" data-mode="single">
         <form method="POST" enctype="multipart/form-data" 
@@ -232,7 +234,9 @@
             </button>
         </form>
     </div>
+
     {% endif %}
+    <!-- ================= END OF FORMS ================= -->
 
     <!-- ================= ERROR MESSAGE ================= -->
     {% if error %}
@@ -248,11 +252,25 @@
 
     <!-- ================= RESULTS ================= -->
     <div id="dynamic-results"></div>
+
     {% if success %}
     
-    <!-- NEW LANDSCAPE LAYOUT -->
-    <section class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-lg shadow-black/10 mb-6">
+    <!-- ================= RESULTS HEADER ================= -->
+    <div class="text-center mb-8 animate-fade-in">
+        <div class="inline-flex items-center justify-center w-14 h-14 mb-4 bg-gradient-to-br from-emerald-500/30 to-teal-500/30 rounded-2xl border border-white/20 shadow-lg">
+            <svg class="w-7 h-7 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+        </div>
+        <h2 class="text-2xl font-bold mb-2">Analysis Complete</h2>
+        <p class="text-white/60">Here are the results for your resume screening</p>
+    </div>
+
+    <!-- ================= MAIN RESULTS CARD ================= -->
+    <section class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-lg shadow-black/10 mb-6 animate-fade-in">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
             <!-- LEFT: PASS / FAIL -->
             <div class="flex flex-col items-center justify-center text-center">
                 <div class="px-8 py-3 rounded-full text-lg font-bold mb-4
@@ -327,7 +345,7 @@
 
     <!-- ===== FAILURE REASONS ===== -->
     {% if status == "FAIL" and failure_reasons_enhanced %}
-    <div class="bg-red-500/10 backdrop-blur-xl border border-red-400/30 rounded-3xl p-6 mb-6">
+    <div class="bg-red-500/10 backdrop-blur-xl border border-red-400/30 rounded-3xl p-6 mb-6 animate-fade-in">
         <h3 class="text-lg font-semibold mb-4 flex items-center text-red-400">
             <svg class="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10"></circle>
@@ -346,7 +364,7 @@
         </ul>
     </div>
     {% elif status == "FAIL" and reasons %}
-    <div class="bg-red-500/10 backdrop-blur-xl border border-red-400/30 rounded-3xl p-6 mb-6">
+    <div class="bg-red-500/10 backdrop-blur-xl border border-red-400/30 rounded-3xl p-6 mb-6 animate-fade-in">
         <h3 class="text-lg font-semibold mb-4 flex items-center text-red-400">
             <svg class="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10"></circle>
@@ -368,7 +386,7 @@
 
     <!-- ===== AI EXPLANATION ===== -->
     {% if explainability %}
-    <div class="bg-blue-500/10 backdrop-blur-xl border border-blue-400/30 rounded-3xl p-6 mb-6">
+    <div class="bg-blue-500/10 backdrop-blur-xl border border-blue-400/30 rounded-3xl p-6 mb-6 animate-fade-in">
         <h3 class="text-lg font-semibold mb-4 flex items-center text-blue-400">
             <svg class="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10"></circle>
@@ -385,7 +403,7 @@
         </div>
     </div>
     {% elif explanation %}
-    <div class="bg-blue-500/10 backdrop-blur-xl border border-blue-400/30 rounded-3xl p-6 mb-6">
+    <div class="bg-blue-500/10 backdrop-blur-xl border border-blue-400/30 rounded-3xl p-6 mb-6 animate-fade-in">
         <h3 class="text-lg font-semibold mb-4 flex items-center text-blue-400">
             <svg class="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10"></circle>
@@ -400,7 +418,7 @@
 
     <!-- ===== TOP SKILLS ===== -->
     {% if top_skills %}
-    <div class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-6 mb-6">
+    <div class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-6 mb-6 animate-fade-in">
         <h3 class="text-lg font-semibold mb-4 flex items-center text-yellow-400">
             <svg class="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
@@ -418,9 +436,9 @@
     </div>
     {% endif %}
 
-    <!-- ===== MATCHED SKILLS FROM GAP ANALYSIS ===== -->
+    <!-- ===== MATCHED SKILLS ===== -->
     {% if matched_skills %}
-    <div class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-6 mb-6">
+    <div class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-6 mb-6 animate-fade-in">
         <h3 class="text-lg font-semibold mb-4 flex items-center text-emerald-400">
             <svg class="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
@@ -438,9 +456,9 @@
     </div>
     {% endif %}
 
-    <!-- ===== SKILL GAPS ===== -->
+    <!-- ===== MISSING SKILLS ===== -->
     {% if missing_skills %}
-    <div class="bg-orange-500/10 backdrop-blur-xl border border-orange-400/30 rounded-3xl p-6 mb-6">
+    <div class="bg-orange-500/10 backdrop-blur-xl border border-orange-400/30 rounded-3xl p-6 mb-6 animate-fade-in">
         <h3 class="text-lg font-semibold mb-4 flex items-center text-orange-400">
             <svg class="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10"></circle>
@@ -461,7 +479,7 @@
 
     <!-- ===== RECOMMENDATIONS ===== -->
     {% if recommendations %}
-    <div class="bg-purple-500/10 backdrop-blur-xl border border-purple-400/30 rounded-3xl p-6 mb-6">
+    <div class="bg-purple-500/10 backdrop-blur-xl border border-purple-400/30 rounded-3xl p-6 mb-6 animate-fade-in">
         <h3 class="text-lg font-semibold mb-4 flex items-center text-purple-400">
             <svg class="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10"></circle>
@@ -483,7 +501,7 @@
 
     <!-- ===== HEATMAP ===== -->
     {% if heatmap %}
-    <div class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-6 mb-6">
+    <div class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-6 mb-6 animate-fade-in">
         <h3 class="text-lg font-semibold mb-4 flex items-center text-cyan-400">
             <svg class="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -506,7 +524,7 @@
 
     <!-- ===== PREVIEW ===== -->
     {% if preview %}
-    <div class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-6 mb-6">
+    <div class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-6 mb-6 animate-fade-in">
         <h3 class="text-lg font-semibold mb-4 flex items-center text-white/80">
             <svg class="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -521,9 +539,9 @@
     {% endif %}
 
     <!-- ===== ACTIONS ===== -->
-    <div class="flex flex-wrap justify-center gap-4 mt-8">
+    <div class="flex flex-wrap justify-center gap-4 mt-8 animate-fade-in">
         <a href="{{ url_for('download_file', f=report) }}" 
-           class="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl text-white font-semibold hover:opacity-90 transition duration-200 flex items-center gap-2 shadow-lg shadow-emerald-500/25">
+           class="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl text-white font-semibold hover:opacity-90 transition duration-200 flex items-center gap-2 shadow-lg shadow-emerald-500/25 btn-press">
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7 10 12 15 17 10"></polyline>
@@ -581,32 +599,34 @@
         });
     }
 
-    // Mode switching
+    // Mode switching (only runs if elements exist)
     const modeButtons = document.querySelectorAll('.mode-btn');
     const modeSections = document.querySelectorAll('.mode-section');
 
-    modeButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const mode = btn.dataset.mode;
-            
-            // Update button styles
-            modeButtons.forEach(b => {
-                b.classList.remove('bg-blue-500/30', 'border-blue-400/40');
-                b.classList.add('bg-white/10', 'border-white/10');
-            });
-            btn.classList.remove('bg-white/10', 'border-white/10');
-            btn.classList.add('bg-blue-500/30', 'border-blue-400/40');
-            
-            // Show/hide sections
-            modeSections.forEach(section => {
-                if (section.dataset.mode === mode) {
-                    section.style.display = 'block';
-                    section.classList.add('animate-fade-in');
-                } else {
-                    section.style.display = 'none';
-                }
+    if (modeButtons.length > 0 && modeSections.length > 0) {
+        modeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const mode = btn.dataset.mode;
+                
+                // Update button styles
+                modeButtons.forEach(b => {
+                    b.classList.remove('bg-blue-500/30', 'border-blue-400/40');
+                    b.classList.add('bg-white/10', 'border-white/10');
+                });
+                btn.classList.remove('bg-white/10', 'border-white/10');
+                btn.classList.add('bg-blue-500/30', 'border-blue-400/40');
+                
+                // Show/hide sections
+                modeSections.forEach(section => {
+                    if (section.dataset.mode === mode) {
+                        section.style.display = 'block';
+                        section.classList.add('animate-fade-in');
+                    } else {
+                        section.style.display = 'none';
+                    }
+                });
             });
         });
-    });
+    }
 </script>
 {% endblock %}
