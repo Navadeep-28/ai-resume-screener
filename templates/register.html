@@ -43,6 +43,7 @@
 
         <!-- Form -->
         <form method="POST" class="space-y-4">
+            
             <!-- Username Input -->
             <div class="relative">
                 <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
@@ -57,6 +58,24 @@
                     placeholder="Username"
                     required
                     autocomplete="username"
+                    class="w-full pl-12 pr-4 py-4 bg-white/10 border border-white/20 rounded-2xl text-white placeholder-white/40 transition duration-200 hover:bg-white/15 focus:bg-white/15 focus:border-emerald-500/50"
+                >
+            </div>
+
+            <!-- ✅ NEW: Email Input -->
+            <div class="relative">
+                <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                    <svg class="w-5 h-5 text-white/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                </div>
+                <input
+                    type="email"
+                    name="email"
+                    placeholder="Email Address"
+                    required
+                    autocomplete="email"
                     class="w-full pl-12 pr-4 py-4 bg-white/10 border border-white/20 rounded-2xl text-white placeholder-white/40 transition duration-200 hover:bg-white/15 focus:bg-white/15 focus:border-emerald-500/50"
                 >
             </div>
