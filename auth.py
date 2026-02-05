@@ -6,25 +6,28 @@ DB = "users.db"
 # ================= DATABASE INIT =================
 def init_db():
     """
-    Initializes the users table.
-    Role is OPTIONAL and defaults to 'hr'.
+    Initializes the users table with email and verification status.
+    Role defaults to 'hr'. is_verified defaults to 0 (False).
     """
     with sqlite3.connect(DB) as conn:
         conn.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
+            email TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
-            role TEXT DEFAULT 'hr'
+            role TEXT DEFAULT 'hr',
+            is_verified BOOLEAN DEFAULT 0
         )
         """)
 
 # ================= REGISTER =================
-def register_user(username, password, role=None):
+def register_user(username, email, password, role=None):
     """
-    Registers a user.
+    Registers a new user.
     - Default role: hr
-    - Optional role: admin
+    - is_verified: 0 (False)
+    Returns True if successful, False if username/email exists.
     """
     role = role if role in ["admin", "hr"] else "hr"
     hashed_password = generate_password_hash(password)
@@ -32,30 +35,61 @@ def register_user(username, password, role=None):
     try:
         with sqlite3.connect(DB) as conn:
             conn.execute(
-                "INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
-                (username, hashed_password, role)
+                "INSERT INTO users (username, email, password, role, is_verified) VALUES (?, ?, ?, ?, 0)",
+                (username, email, hashed_password, role)
             )
         return True
     except sqlite3.IntegrityError:
-        # Username already exists
+        # Username or Email already exists
         return False
 
 # ================= AUTHENTICATE =================
 def authenticate_user(username, password):
     """
     Authenticates user credentials.
-    Returns role if valid, else None.
+    Returns tuple: (role, is_verified) if credentials valid.
+    Returns None if invalid.
     """
     with sqlite3.connect(DB) as conn:
         row = conn.execute(
-            "SELECT password, role FROM users WHERE username=?",
+            "SELECT password, role, is_verified FROM users WHERE username=?",
             (username,)
         ).fetchone()
 
     if row and check_password_hash(row[0], password):
-        return row[1]
+        # Return role and verification status
+        return row[1], bool(row[2])
 
     return None
+
+# ================= VERIFICATION HELPERS =================
+def verify_user_email(email):
+    """
+    Sets is_verified = 1 for the given email.
+    """
+    try:
+        with sqlite3.connect(DB) as conn:
+            cursor = conn.cursor()
+            cursor.execute("UPDATE users SET is_verified = 1 WHERE email = ?", (email,))
+            if cursor.rowcount > 0:
+                conn.commit()
+                return True
+            return False
+    except Exception as e:
+        print(f"DB Error verifying email: {e}")
+        return False
+
+def get_user_by_email(email):
+    """
+    Checks if a user exists with this email.
+    Returns user row or None.
+    """
+    with sqlite3.connect(DB) as conn:
+        row = conn.execute(
+            "SELECT username FROM users WHERE email=?",
+            (email,)
+        ).fetchone()
+    return row
 
 # ================= ROLE HELPERS (OPTIONAL) =================
 def is_admin(username):
