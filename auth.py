@@ -7,7 +7,7 @@ DB = "users.db"
 def init_db():
     """
     Initializes the users table with email and verification status.
-    Role defaults to 'hr'. is_verified defaults to 0 (False).
+    Role defaults to 'hr'. is_verified defaults to 1 (True - Auto-Verified).
     """
     with sqlite3.connect(DB) as conn:
         conn.execute("""
@@ -17,7 +17,7 @@ def init_db():
             email TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
             role TEXT DEFAULT 'hr',
-            is_verified BOOLEAN DEFAULT 0
+            is_verified BOOLEAN DEFAULT 1
         )
         """)
 
@@ -26,18 +26,22 @@ def register_user(username, email, password, role=None):
     """
     Registers a new user.
     - Default role: hr
-    - is_verified: 0 (False)
+    - is_verified: 1 (True - Auto-Verified)
     Returns True if successful, False if username/email exists.
     """
     role = role if role in ["admin", "hr"] else "hr"
     hashed_password = generate_password_hash(password)
+    email = email.lower().strip() # ✅ Force lowercase
 
     try:
         with sqlite3.connect(DB) as conn:
-            conn.execute(
-                "INSERT INTO users (username, email, password, role, is_verified) VALUES (?, ?, ?, ?, 0)",
+            cursor = conn.cursor()
+            # ✅ is_verified set to 1 by default now
+            cursor.execute(
+                "INSERT INTO users (username, email, password, role, is_verified) VALUES (?, ?, ?, ?, 1)",
                 (username, email, hashed_password, role)
             )
+            conn.commit() # ✅ Explicit commit
         return True
     except sqlite3.IntegrityError:
         # Username or Email already exists
@@ -66,13 +70,15 @@ def authenticate_user(username, password):
 def verify_user_email(email):
     """
     Sets is_verified = 1 for the given email.
+    (Kept for compatibility, but now users are auto-verified)
     """
+    email = email.lower().strip() # ✅ Force lowercase
     try:
         with sqlite3.connect(DB) as conn:
             cursor = conn.cursor()
             cursor.execute("UPDATE users SET is_verified = 1 WHERE email = ?", (email,))
             if cursor.rowcount > 0:
-                conn.commit()
+                conn.commit() # ✅ Explicit commit
                 return True
             return False
     except Exception as e:
@@ -84,6 +90,7 @@ def get_user_by_email(email):
     Checks if a user exists with this email.
     Returns user row or None.
     """
+    email = email.lower().strip() # ✅ Force lowercase
     with sqlite3.connect(DB) as conn:
         row = conn.execute(
             "SELECT username FROM users WHERE email=?",
