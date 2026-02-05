@@ -1,4 +1,5 @@
 Flask
+Flask-Mail
 scikit-learn
 PyPDF2
 joblib
@@ -9,3 +10,4 @@ spacy
 plotly
 gunicorn
 requests
+
