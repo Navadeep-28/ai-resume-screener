@@ -7,7 +7,13 @@ import os, re, json, joblib, sqlite3, io
 import numpy as np
 import PyPDF2
 import spacy
-from werkzeug.security import generate_password_hash, check_password_hash
+# Email imports
+import smtplib
+from flask_mail import Mail, Message
+from itsdangerous import URLSafeTimedSerializer
+# Auth module
+import auth 
+
 from sklearn.metrics.pairwise import cosine_similarity
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.pagesizes import letter, A4
@@ -34,6 +40,22 @@ DB = "users.db"
 os.makedirs(UPLOAD, exist_ok=True)
 os.makedirs("models", exist_ok=True)
 
+# ================= EMAIL CONFIGURATION =================
+# ⚠️ REPLACE WITH YOUR REAL GMAIL CREDENTIALS
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'your-email@gmail.com' 
+app.config['MAIL_PASSWORD'] = 'your-app-password'  # Use App Password if 2FA is on
+app.config['MAIL_DEFAULT_SENDER'] = 'your-email@gmail.com'
+
+mail = Mail(app)
+s = URLSafeTimedSerializer(app.secret_key)
+
+# ================= DATABASE INIT =================
+# Handled by auth module
+auth.init_db()
+
 # ================= JOB DESCRIPTION TEMPLATES =================
 JOB_TEMPLATES = {
     "python_dev": "Python Developer with Flask, Django, REST APIs and SQL.",
@@ -42,20 +64,6 @@ JOB_TEMPLATES = {
     "frontend_dev": "Frontend Developer with HTML, CSS, JavaScript, React, UI/UX.",
     "backend_dev": "Backend Developer with APIs, databases, authentication."
 }
-
-# ================= DATABASE =================
-def init_db():
-    with sqlite3.connect(DB) as conn:
-        conn.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL,
-            role TEXT DEFAULT 'hr'
-        )
-        """)
-
-init_db()
 
 # ================= HELPERS =================
 def clean_text(text):
@@ -68,31 +76,20 @@ def extract_keywords(text):
     doc = nlp(text.lower())
     return set(t.text for t in doc if t.is_alpha and not t.is_stop)
 
-def register_user(username, password, role=None):
-    role = role if role in ["admin", "hr"] else "hr"
-    hashed = generate_password_hash(password)
-    try:
-        with sqlite3.connect(DB) as conn:
-            conn.execute(
-                "INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
-                (username, hashed, role)
-            )
-        return True
-    except sqlite3.IntegrityError:
-        return False
-
-def authenticate_user(username, password):
-    with sqlite3.connect(DB) as conn:
-        row = conn.execute(
-            "SELECT password, role FROM users WHERE username=?",
-            (username,)
-        ).fetchone()
-    if row and check_password_hash(row[0], password):
-        return row[1]
-    return None
-
 def login_required():
     return "user" in session
+
+def send_verification_email(email):
+    token = s.dumps(email, salt='email-confirm')
+    link = url_for('verify_email', token=token, _external=True)
+    msg = Message('Confirm Email - AI Resume Screener', recipients=[email])
+    msg.body = f'Click the link to verify your account: {link}'
+    try:
+        mail.send(msg)
+        return True
+    except Exception as e:
+        print(f"Mail Error: {e}")
+        return False
 
 # ================= ATS DECISION LOGIC =================
 
@@ -122,49 +119,36 @@ def decision_reason(decision, quality, match):
 
 def calculate_confidence(final, quality, match):
     """Calculate confidence score based on how far from thresholds"""
-    # Higher confidence when scores are far from decision boundaries
     quality_distance = abs(quality - QUALITY_THRESHOLD)
     match_distance = abs(match - MATCH_THRESHOLD)
     final_distance = abs(final - PASS_THRESHOLD)
-    
-    # Average distance from thresholds (normalized)
     confidence = (quality_distance + match_distance + final_distance) / 3
-    # Scale to 0.5-1.0 range (minimum 50% confidence)
     confidence = min(0.5 + confidence, 1.0)
-    
     return confidence
 
 def failure_reasons(quality, match):
     reasons = []
-
     if quality < QUALITY_THRESHOLD:
         reasons.append("Resume quality is below the expected standard")
-
     if match < MATCH_THRESHOLD:
         reasons.append("Job description relevance is low")
-
     if not reasons:
         reasons.append("Overall score did not meet hiring benchmark")
-
     return reasons
 
 def skill_gap_analysis(resume_text, job_desc):
     resume_skills = extract_keywords(resume_text)
     job_skills = extract_keywords(job_desc)
-
     missing = sorted(list(job_skills - resume_skills))
     matched = sorted(list(job_skills & resume_skills))
-
     return matched[:10], missing[:10]
 
 def improvement_tips(missing_skills):
     tips = []
     for skill in missing_skills[:5]:
         tips.append(f"Add hands-on experience or projects related to '{skill}'")
-
     if not tips:
         tips.append("Resume is strong — consider optimizing formatting and clarity")
-
     return tips
 
 def ai_explanation(final, quality, match, decision):
@@ -224,31 +208,61 @@ def score_resume(resume_text, job_desc):
     }
 
 # ================= AUTH ROUTES =================
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        role = authenticate_user(
-            request.form["username"],
-            request.form["password"]
-        )
-        if role:
-            session["user"] = request.form["username"]
-            session["role"] = role
-            return redirect(url_for("index"))
-        return render_template("login.html", error="Invalid credentials")
-    return render_template("login.html")
-
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
-        if register_user(
-            request.form["username"],
-            request.form["password"],
-            request.form.get("role")
-        ):
-            return redirect(url_for("login"))
-        return render_template("register.html", error="User already exists")
+        username = request.form["username"]
+        email = request.form["email"]
+        password = request.form["password"]
+        role = request.form.get("role")
+
+        if auth.register_user(username, email, password, role):
+            if send_verification_email(email):
+                return render_template(
+                    "login.html", 
+                    success="Account created! Please check your email to verify."
+                )
+            else:
+                return render_template(
+                    "register.html", 
+                    error="Account created, but email failed to send."
+                )
+        
+        return render_template("register.html", error="Username or Email already exists")
+    
     return render_template("register.html")
+
+@app.route('/verify_email/<token>')
+def verify_email(token):
+    try:
+        email = s.loads(token, salt='email-confirm', max_age=3600)
+        if auth.verify_user_email(email):
+            return render_template("login.html", success="Email verified! You can now login.")
+        else:
+            return render_template("login.html", error="Verification failed. User not found.")
+    except Exception:
+        return render_template("login.html", error="The confirmation link is invalid or has expired.")
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        
+        result = auth.authenticate_user(username, password)
+        
+        if result:
+            role, is_verified = result
+            if not is_verified:
+                return render_template("login.html", error="Please verify your email first.")
+            
+            session["user"] = username
+            session["role"] = role
+            return redirect(url_for("index"))
+        
+        return render_template("login.html", error="Invalid credentials")
+    
+    return render_template("login.html")
 
 @app.route("/logout")
 def logout():
