@@ -45,9 +45,9 @@ os.makedirs("models", exist_ok=True)
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'your-email@gmail.com' 
-app.config['MAIL_PASSWORD'] = 'your-app-password'  # Use App Password if 2FA is on
-app.config['MAIL_DEFAULT_SENDER'] = 'your-email@gmail.com'
+app.config['MAIL_USERNAME'] = 'resumescreener963@gmail.com' 
+app.config['MAIL_PASSWORD'] = 'ocvs irmv jogk zstz'  # Use App Password if 2FA is on
+app.config['MAIL_DEFAULT_SENDER'] = 'resumescreener963@gmail.com'
 
 mail = Mail(app)
 s = URLSafeTimedSerializer(app.secret_key)
@@ -212,9 +212,12 @@ def score_resume(resume_text, job_desc):
 def register():
     if request.method == "POST":
         username = request.form["username"]
-        email = request.form["email"]
+        email = request.form.get("email") # Use .get() to prevent KeyError if missing
         password = request.form["password"]
         role = request.form.get("role")
+
+        if not email:
+            return render_template("register.html", error="Email is required")
 
         if auth.register_user(username, email, password, role):
             if send_verification_email(email):
