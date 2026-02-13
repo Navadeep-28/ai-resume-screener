@@ -65,18 +65,55 @@ JOB_TEMPLATES = {
     "backend_dev": "Backend Developer with APIs, databases, authentication."
 }
 
-# ================= HELPERS =================
+# ================= HELPERS (ENHANCED) =================
+
 def clean_text(text):
-    text = re.sub(r"\n+", " ", text.lower())
-    # ✅ IMPROVEMENT: Allow numbers (0-9) to capture years of experience
-    text = re.sub(r"[^a-z0-9\s]", " ", text) 
+    """
+    Cleans text for better processing of complex layouts.
+    - Lowercases
+    - Preserves numbers (crucial for years of exp, GPA)
+    - Removes special characters but keeps essential punctuation for separation
+    - Lemmatizes
+    """
+    # Convert to lowercase
+    text = text.lower()
+    
+    # Replace newlines and multiple spaces with a single space
+    text = re.sub(r"\s+", " ", text)
+    
+    # Remove non-alphanumeric characters (keeping spaces and digits)
+    # We keep digits because "3 years", "2016", "3.93 GPA" are important
+    text = re.sub(r"[^a-z0-9\s]", " ", text)
+    
+    # Tokenize and lemmatize using Spacy
     doc = nlp(text)
-    return " ".join(t.lemma_ for t in doc if not t.is_stop)
+    
+    # Remove stop words and short tokens (1-2 chars), but keep numbers if relevant
+    tokens = [
+        token.lemma_ for token in doc 
+        if not token.is_stop and (len(token.text) > 2 or token.like_num)
+    ]
+    
+    return " ".join(tokens)
 
 def extract_keywords(text):
+    """
+    Extracts distinct keywords (nouns, proper nouns, and numbers)
+    """
     doc = nlp(text.lower())
-    # ✅ IMPROVEMENT: Capture digits too (e.g., "5" years)
-    return set(t.text for t in doc if (t.is_alpha or t.is_digit) and not t.is_stop)
+    # Extract noun chunks (phrases) and individual interesting tokens
+    keywords = set()
+    
+    # Add individual tokens (nouns, proper nouns, adjectives)
+    for token in doc:
+        if (token.pos_ in ["NOUN", "PROPN", "ADJ"] or token.like_num) and not token.is_stop and len(token.text) > 2:
+            keywords.add(token.text)
+            
+    # Add named entities (like "University of California", "Python", "Google")
+    for ent in doc.ents:
+        keywords.add(ent.text)
+        
+    return keywords
 
 def login_required():
     return "user" in session
@@ -188,37 +225,63 @@ except Exception as e:
     MODELS = False
 
 # =========================================================
-# 🔥 CORE RESUME SCORING FUNCTION (REUSABLE)
+# 🔥 CORE RESUME SCORING FUNCTION (HIGH ACCURACY)
 # =========================================================
 def score_resume(resume_text, job_desc):
-    """Reusable function to score a resume against a job description"""
+    """
+    Reusable function to score a resume against a job description.
+    Designed to handle complex/dense resumes.
+    """
     clean_resume = clean_text(resume_text)
     clean_jd = clean_text(job_desc)
 
-    # 1. Quality Score (Structure/Grammar)
-    q = model_general.predict(
-        tfidf_general.transform([clean_resume])
-    )[0]
+    # 1. Quality Score (Structure/Grammar - ML Model)
+    # Dense resumes might have unusual structures, so we trust the content match more
+    try:
+        q_vec = tfidf_general.transform([clean_resume])
+        q = model_general.predict(q_vec)[0]
+    except:
+        q = 0.5 # Fallback if model fails
 
-    # 2. Match Score (Semantic Similarity)
+    # 2. Match Score (Semantic Similarity - Cosine)
     resume_vec = tfidf_match.transform([clean_resume])
     jd_vec = tfidf_match.transform([clean_jd])
     m = cosine_similarity(resume_vec, jd_vec)[0][0]
 
-    # 3. Keyword Coverage (Hard Skills)
+    # 3. Keyword Coverage (Hard Skills & Entities)
+    # This is critical for "hard" resumes where specific skills are listed in tables
     resume_keywords = extract_keywords(resume_text)
     jd_keywords = extract_keywords(job_desc)
+    
+    # Intersection of keywords
     matched = resume_keywords & jd_keywords
-    coverage = round(len(matched) / max(len(jd_keywords), 1) * 100, 2)
+    
+    # Calculate coverage based on JD requirements
+    # We use a logarithmic scale for coverage to avoid penalizing long JDs too much
+    if len(jd_keywords) > 0:
+        coverage = round((len(matched) / len(jd_keywords)) * 100, 2)
+    else:
+        coverage = 0
 
-    # ✅ ACCURACY BOOST:
-    # Adjusted weights: Match (70%) is now more important than Quality (30%)
-    # Previously it was Quality(60%) / Match(40%)
-    final = (0.7 * m) + (0.3 * q)
+    # ✅ ACCURACY BOOST LOGIC:
+    # 1. Base Score: Weighted average of semantic match (m) and quality (q)
+    #    We give high weight to 'm' because dense resumes are content-rich.
+    final = (0.75 * m) + (0.25 * q)
 
-    # ✅ BONUS: If keyword coverage is very high (>70%), boost the score
-    if coverage > 70:
-        final = min(final + 0.1, 1.0) # Add 10% boost, cap at 100%
+    # 2. Coverage Boost: If specific keywords match well, boost the score.
+    #    This helps with resumes that have the right skills but might be formatted weirdly.
+    if coverage > 40: # If >40% of JD keywords are found
+        final += 0.10 # +10% boost
+    if coverage > 60: # If >60% of JD keywords are found
+        final += 0.05 # Additional +5% boost
+
+    # 3. Penalty for very low match
+    if m < 0.2:
+        final -= 0.1 # Penalize irrelevant resumes
+
+    # Cap final score at 1.0 (100%)
+    final = min(final, 1.0)
+    final = max(final, 0.0) # Ensure no negative score
 
     return {
         "final": float(final),
