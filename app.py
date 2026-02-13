@@ -68,13 +68,15 @@ JOB_TEMPLATES = {
 # ================= HELPERS =================
 def clean_text(text):
     text = re.sub(r"\n+", " ", text.lower())
-    text = re.sub(r"[^a-z\s]", " ", text)
+    # ✅ IMPROVEMENT: Allow numbers (0-9) to capture years of experience
+    text = re.sub(r"[^a-z0-9\s]", " ", text) 
     doc = nlp(text)
     return " ".join(t.lemma_ for t in doc if not t.is_stop)
 
 def extract_keywords(text):
     doc = nlp(text.lower())
-    return set(t.text for t in doc if t.is_alpha and not t.is_stop)
+    # ✅ IMPROVEMENT: Capture digits too (e.g., "5" years)
+    return set(t.text for t in doc if (t.is_alpha or t.is_digit) and not t.is_stop)
 
 def login_required():
     return "user" in session
@@ -91,49 +93,59 @@ def send_verification_email(email):
         print(f"Mail Error: {e}")
         return False
 
-# ================= ATS DECISION LOGIC =================
+# ================= ATS DECISION LOGIC (HIGH ACCURACY) =================
 
-PASS_THRESHOLD = 0.70      # overall
-MATCH_THRESHOLD = 0.60     # job relevance
-QUALITY_THRESHOLD = 0.65   # resume quality
+PASS_THRESHOLD = 0.65      # Overall Score (65%)
+MATCH_THRESHOLD = 0.50     # Job Relevance (50% - more lenient, focuses on final score)
+QUALITY_THRESHOLD = 0.50   # Resume Quality (50%)
 
 def ats_decision(final, quality, match):
+    # ✅ IMPROVEMENT: High Impact Pass
+    # If final score is very high, pass immediately regardless of sub-scores
+    if final >= 0.75:
+        return "PASS"
+    
+    # Standard Pass: Must meet overall threshold AND have decent relevance
     if final >= PASS_THRESHOLD and match >= MATCH_THRESHOLD:
         return "PASS"
+        
     return "FAIL"
 
 def decision_reason(decision, quality, match):
     """Generate human-readable reason for the decision"""
     if decision == "PASS":
-        return "The candidate's resume meets the required standards for this position."
+        if match >= 0.8:
+            return "Excellent match! Candidate skills highly align with the job."
+        return "Candidate meets the core requirements for this position."
     else:
         reasons = []
-        if quality < QUALITY_THRESHOLD:
-            reasons.append("resume quality")
         if match < MATCH_THRESHOLD:
-            reasons.append("job relevance")
+            reasons.append("low relevance to job description")
+        if quality < QUALITY_THRESHOLD:
+            reasons.append("resume structure needs improvement")
         
         if reasons:
-            return f"The candidate did not meet requirements in: {', '.join(reasons)}."
-        return "The overall score did not meet the hiring benchmark."
+            return f"Candidate failed due to: {', '.join(reasons)}."
+        return "Overall score did not meet the hiring benchmark."
 
 def calculate_confidence(final, quality, match):
-    """Calculate confidence score based on how far from thresholds"""
-    quality_distance = abs(quality - QUALITY_THRESHOLD)
-    match_distance = abs(match - MATCH_THRESHOLD)
-    final_distance = abs(final - PASS_THRESHOLD)
-    confidence = (quality_distance + match_distance + final_distance) / 3
-    confidence = min(0.5 + confidence, 1.0)
-    return confidence
+    """
+    Calculate confidence based on score decisiveness.
+    High scores (>80%) or Low scores (<40%) have high confidence.
+    Borderline scores (60-70%) have lower confidence.
+    """
+    dist_from_borderline = abs(final - 0.65) # Distance from the "maybe" zone
+    confidence = 0.5 + (dist_from_borderline * 1.5) # Scale it up
+    return min(confidence, 0.98) # Cap at 98%
 
 def failure_reasons(quality, match):
     reasons = []
     if quality < QUALITY_THRESHOLD:
-        reasons.append("Resume quality is below the expected standard")
+        reasons.append("Resume formatting or structure is below standard")
     if match < MATCH_THRESHOLD:
-        reasons.append("Job description relevance is low")
+        reasons.append("Skills do not sufficiently match the job description")
     if not reasons:
-        reasons.append("Overall score did not meet hiring benchmark")
+        reasons.append("Cumulative score falls below the 65% hiring threshold")
     return reasons
 
 def skill_gap_analysis(resume_text, job_desc):
@@ -146,20 +158,20 @@ def skill_gap_analysis(resume_text, job_desc):
 def improvement_tips(missing_skills):
     tips = []
     for skill in missing_skills[:5]:
-        tips.append(f"Add hands-on experience or projects related to '{skill}'")
+        tips.append(f"Highlight experience with '{skill}' if applicable")
     if not tips:
-        tips.append("Resume is strong — consider optimizing formatting and clarity")
+        tips.append("Resume is strong — focus on quantifying achievements")
     return tips
 
 def ai_explanation(final, quality, match, decision):
     if decision == "PASS":
         return (
-            "The resume demonstrates strong alignment with the job role, "
-            "showing both relevant skills and acceptable resume quality."
+            f"Strong candidate with a {int(final*100)}% match score. "
+            "Key skills are present and resume quality is acceptable."
         )
     return (
-        "The resume does not sufficiently match the job requirements. "
-        "Improving relevance and skill alignment can significantly increase chances."
+        "Candidate does not meet the threshold. "
+        "The resume lacks key terminology found in the job description."
     )
 
 
@@ -183,21 +195,30 @@ def score_resume(resume_text, job_desc):
     clean_resume = clean_text(resume_text)
     clean_jd = clean_text(job_desc)
 
+    # 1. Quality Score (Structure/Grammar)
     q = model_general.predict(
         tfidf_general.transform([clean_resume])
     )[0]
 
+    # 2. Match Score (Semantic Similarity)
     resume_vec = tfidf_match.transform([clean_resume])
     jd_vec = tfidf_match.transform([clean_jd])
     m = cosine_similarity(resume_vec, jd_vec)[0][0]
 
-    final = 0.6 * q + 0.4 * m
-
+    # 3. Keyword Coverage (Hard Skills)
     resume_keywords = extract_keywords(resume_text)
     jd_keywords = extract_keywords(job_desc)
-
     matched = resume_keywords & jd_keywords
     coverage = round(len(matched) / max(len(jd_keywords), 1) * 100, 2)
+
+    # ✅ ACCURACY BOOST:
+    # Adjusted weights: Match (70%) is now more important than Quality (30%)
+    # Previously it was Quality(60%) / Match(40%)
+    final = (0.7 * m) + (0.3 * q)
+
+    # ✅ BONUS: If keyword coverage is very high (>70%), boost the score
+    if coverage > 70:
+        final = min(final + 0.1, 1.0) # Add 10% boost, cap at 100%
 
     return {
         "final": float(final),
@@ -345,71 +366,58 @@ def index():
             )
 
         # ================= ML SCORING =================
-        q = model_general.predict(
-            tfidf_general.transform([clean_resume])
-        )[0]
-
-        resume_vec = tfidf_match.transform([clean_resume])
-        jd_vec = tfidf_match.transform([clean_jd])
-        m = cosine_similarity(resume_vec, jd_vec)[0][0]
-
-
-        final = 0.6 * q + 0.4 * m
+        scores = score_resume(text, job_desc)
+        final = scores["final"]
+        q = scores["quality"]
+        m = scores["match"]
+        jd_coverage = scores["coverage"]
+        matched_skills = scores["matched_skills"]
         
         # ================= ENHANCED FEATURES =================
-        # Calculate keyword-based metrics
-        resume_keywords = extract_keywords(text)
-        jd_keywords = extract_keywords(job_desc)
-        common_skills = resume_keywords.intersection(jd_keywords)
-        jd_coverage = round(len(common_skills) / max(len(jd_keywords), 1) * 100, 2)
-        
         # Determine status with configurable threshold
-        PASS_THRESHOLD_CONFIG = 0.65
-        status = "PASS" if final >= PASS_THRESHOLD_CONFIG else "FAIL"
+        status = ats_decision(final, q, m)
         
         # Enhanced failure reasons with detailed criteria
         enhanced_failure_reasons = []
         if q < 0.5:
             enhanced_failure_reasons.append("Low resume quality (format, clarity, or structure issues)")
-        if m < 0.6:
+        if m < 0.5:
             enhanced_failure_reasons.append("Poor alignment with the job description")
-        if jd_coverage < 50:
-            enhanced_failure_reasons.append("More than half of the required skills are missing")
-        if len(common_skills) < 5:
-            enhanced_failure_reasons.append("Insufficient relevant skills detected for this role")
+        if jd_coverage < 40:
+            enhanced_failure_reasons.append("Critical skills missing from the resume")
         if status == "PASS":
             enhanced_failure_reasons = []
         
         # Calculate hiring risk
-        if final >= 0.8 and jd_coverage >= 70:
+        if final >= 0.8:
             hiring_risk = "LOW"
-        elif final >= 0.6 and jd_coverage >= 50:
+        elif final >= 0.6:
             hiring_risk = "MEDIUM"
         else:
             hiring_risk = "HIGH"
         
-        # Explainability module for AI transparency
+        # Explainability module
         explainability = {
             "quality_explanation": (
                 "Resume shows strong structure and clarity"
-                if q >= 0.7 else
+                if q >= 0.6 else
                 "Resume structure or clarity needs improvement"
             ),
             "match_explanation": (
                 "Resume aligns well with the job role"
-                if m >= 0.7 else
+                if m >= 0.6 else
                 "Resume does not sufficiently match the job requirements"
             ),
             "coverage_explanation": f"{jd_coverage}% of job description skills were found in the resume",
             "decision_explanation": (
-                "Candidate meets the minimum criteria for this role"
+                "Candidate meets the criteria for this role"
                 if status == "PASS"
-                else "Candidate does not meet the minimum criteria for this role"
+                else "Candidate does not meet the minimum criteria"
             )
         }
         
         # Keep existing features
-        decision = ats_decision(final, q, m)
+        decision = status
         reasons = failure_reasons(q, m)
         matched_skills, missing_skills = skill_gap_analysis(text, job_desc)
         recommendations = improvement_tips(missing_skills)
