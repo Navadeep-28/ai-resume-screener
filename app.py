@@ -7,12 +7,16 @@ import os, re, json, joblib, sqlite3, io
 import numpy as np
 import PyPDF2
 import spacy
+import subprocess
+import datetime
 # Email imports
 import smtplib
 from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer
 # Auth module
 import auth 
+# ... other imports
+import train_model  
 
 from sklearn.metrics.pairwise import cosine_similarity
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
@@ -64,6 +68,25 @@ JOB_TEMPLATES = {
     "frontend_dev": "Frontend Developer with HTML, CSS, JavaScript, React, UI/UX.",
     "backend_dev": "Backend Developer with APIs, databases, authentication."
 }
+
+# ================= LOGGING HELPER =================
+def log_action(user, action, details):
+    """Log user actions to database"""
+    with sqlite3.connect(DB) as conn:
+        # Create logs table if not exists
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT,
+                user TEXT,
+                action TEXT,
+                details TEXT
+            )
+        """)
+        conn.execute(
+            "INSERT INTO logs (timestamp, user, action, details) VALUES (?, ?, ?, ?)",
+            (datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), user, action, details)
+        )
 
 # ================= HELPERS (ENHANCED) =================
 
@@ -379,6 +402,68 @@ def results():
         **result_data
     )
 
+# ================= ADMIN ROUTES =================
+@app.route("/admin")
+def admin_panel():
+    if not login_required() or session.get("role") != "admin":
+        return render_template("index.html", error="⛔ Access Denied: Admins only.")
+
+    with sqlite3.connect(DB) as conn:
+        # 1. Get Users
+        users = conn.execute("SELECT id, username, email, role, is_verified FROM users").fetchall()
+
+        # 2. Get Logs (Last 50)
+        # Create logs table if it doesn't exist yet
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT,
+                user TEXT,
+                action TEXT,
+                details TEXT
+            )
+        """)
+        logs = conn.execute("SELECT timestamp, user, action, details FROM logs ORDER BY id DESC LIMIT 50").fetchall()
+
+    return render_template("admin.html", users=users, logs=logs)
+
+@app.route("/admin/delete_user/<int:user_id>")
+def delete_user(user_id):
+    if not login_required() or session.get("role") != "admin":
+        return redirect(url_for("index"))
+
+    with sqlite3.connect(DB) as conn:
+        conn.execute("DELETE FROM users WHERE id=?", (user_id,))
+
+    return redirect(url_for("admin_panel"))
+
+@app.route("/admin/retrain_model")
+def retrain_model():
+    if not login_required() or session.get("role") != "admin":
+        return redirect(url_for("index"))
+
+    try:
+        # ✅ CALL FUNCTION DIRECTLY (No Subprocess)
+        success = train_model.train()
+        
+        if success:
+            # Reload models in memory so app uses new ones immediately
+            global tfidf_general, model_general, tfidf_match, model_match, skills_list
+            tfidf_general = joblib.load("models/tfidf_general.pkl")
+            model_general = joblib.load("models/model_general.pkl")
+            tfidf_match = joblib.load("models/tfidf_match.pkl")
+            model_match = joblib.load("models/model_match.pkl")
+            skills_list = json.load(open("models/skills.json"))
+            
+            log_action(session["user"], "System", "Retrained & Reloaded AI Models")
+            return redirect(url_for("admin_panel"))
+        else:
+            return "Training failed."
+            
+    except Exception as e:
+        print(f"TRAINING ERROR: {e}")
+        return f"Error: {e}"
+
 # ================= MAIN APP =================
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -402,6 +487,9 @@ def index():
 
         path = os.path.join(UPLOAD, file.filename)
         file.save(path)
+
+        # ✅ LOG UPLOAD
+        log_action(session["user"], "Single Screen", f"Analyzed {file.filename}")
 
         text = ""
         with open(path, "rb") as f:
@@ -604,6 +692,9 @@ def batch_screen():
         if not results:
             return render_template("batch_results.html", error="No valid resumes found")
 
+        # ✅ LOG BATCH
+        log_action(session["user"], "Batch Screen", f"Processed {len(results)} resumes")
+
         # 🔥 SORT
         results.sort(key=lambda x: x["final"], reverse=True)
 
@@ -755,6 +846,9 @@ def compare_resumes():
             "compare_results.html",
             error="Could not extract text from one or both PDFs."
         )
+
+    # ✅ LOG COMPARE
+    log_action(session["user"], "Compare", f"Compared {r1.filename} vs {r2.filename}")
 
     s1 = score_resume(t1, job_desc)
     s2 = score_resume(t2, job_desc)

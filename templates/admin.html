@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Admin Panel{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto pt-32 px-6 pb-12">
+    
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-extrabold bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent">
+            🛡️ Admin Panel
+        </h1>
+        <a href="{{ url_for('retrain_model') }}" class="px-6 py-3 bg-red-500/20 hover:bg-red-500/30 border border-red-400/40 text-red-300 rounded-2xl transition flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            Retrain AI Models
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        <!-- USER MANAGEMENT -->
+        <div class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-lg">
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                User Management
+            </h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead>
+                        <tr class="text-white/50 border-b border-white/10">
+                            <th class="pb-3">User</th>
+                            <th class="pb-3">Role</th>
+                            <th class="pb-3">Status</th>
+                            <th class="pb-3 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/5">
+                        {% for u in users %}
+                        <tr>
+                            <td class="py-3">
+                                <div class="font-bold">{{ u[1] }}</div>
+                                <div class="text-xs text-white/40">{{ u[2] }}</div>
+                            </td>
+                            <td class="py-3">
+                                <span class="px-2 py-1 rounded text-xs {{ 'bg-red-500/20 text-red-300' if u[3]=='admin' else 'bg-blue-500/20 text-blue-300' }}">
+                                    {{ u[3]|upper }}
+                                </span>
+                            </td>
+                            <td class="py-3">
+                                {% if u[4] %}
+                                    <span class="text-emerald-400">Verified</span>
+                                {% else %}
+                                    <span class="text-yellow-400">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3 text-right">
+                                {% if u[1] != session.user %}
+                                <a href="{{ url_for('delete_user', user_id=u[0]) }}" class="text-red-400 hover:text-red-300 transition" onclick="return confirm('Delete user?')">
+                                    <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- SYSTEM LOGS -->
+        <div class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-lg">
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                System Activity
+            </h2>
+            <div class="overflow-y-auto max-h-[400px] pr-2 custom-scrollbar">
+                <div class="space-y-3">
+                    {% for log in logs %}
+                    <div class="bg-white/5 rounded-xl p-3 text-sm border border-white/5">
+                        <div class="flex justify-between mb-1">
+                            <span class="font-bold text-blue-300">{{ log[1] }}</span>
+                            <span class="text-white/30 text-xs">{{ log[0] }}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-1.5 py-0.5 rounded bg-white/10 text-[10px] text-white/60">{{ log[2] }}</span>
+                            <span class="text-white/80">{{ log[3] }}</span>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-white/40 text-center py-4">No activity recorded yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
